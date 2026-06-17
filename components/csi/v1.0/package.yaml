@@ -1,0 +1,38 @@
+name: csi
+version: V1.0.0
+description: chip system interface.
+tag: 核心模块
+keywords:                                      # 多标签
+  - base
+license: Apache license v2.0                   # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+
+# hidden: true
+
+type: common
+yoc_version:
+  - v7.2
+  - v7.3
+
+build_config:
+  include:
+    - include
+    - include/core
+
+  cflag: -Os
+  cxxflag: -Os
+
+
+source_file:
+  - src/*.c
+
+
+install:
+  - dest: include/
+    source:
+      - include/*.h
+  - dest: include/core
+    source:
+      - include/core/*.h
+  - dest: include/drv
+    source:
+      - include/drv/*.h
