@@ -1,0 +1,8 @@
+**/.DS_Store
+**/Obj
+**/Lst
+**/aft_build_macos.sh
+**/Makefile
+**/SKILL.md
+.embedder/
+.embedderignore
