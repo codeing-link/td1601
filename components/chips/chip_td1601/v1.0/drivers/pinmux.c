@@ -59,37 +59,21 @@
 #define ATTRIBUTE_DATA
 #endif
 
-static int get_shift_bit(uint32_t val)
-{
-    if (val == 0)
-        return -1; // 无bit置1，错误
-
-    for (int i = 0; i < 32; i++)
-    {
-        if (val == (1U << i))
-        {
-            return i;
-        }
-    }
-    return -2; // 多个bit同时置1
-}
-
 /*******************************************************************************
  * function: danica_ioreuse_inital
  *
  * description:
  *   initial danica_pinmux
  *******************************************************************************/
-ATTRIBUTE_DATA csi_error_t csi_pin_set_mux(port_name_t port_name, pin_name_t pin_name, pin_func_t pin_func)
+ATTRIBUTE_DATA csi_error_t csi_pin_set_mux(pin_name_t pin_name, pin_func_t pin_func)
 {
     uint32_t val = 0U;
     uint32_t reg_val = 0U;
     uint32_t reg_mux0 = 0U;
     csi_error_t ret = CSI_OK;
 
-    uint32_t offset = get_shift_bit((uint32_t)pin_name);
     if (pin_func >= 5) {
-        if (port_name == PORTA) {
+        if (pin_name <= PA31) {
             val = readl(CSKY_ANA_IO_EN_REG);
             val |= (uint32_t)1U << ((uint8_t)pin_func - 5U);
             writel(val, CSKY_ANA_IO_EN_REG);
@@ -100,67 +84,64 @@ ATTRIBUTE_DATA csi_error_t csi_pin_set_mux(port_name_t port_name, pin_name_t pin
         }
          ret = CSI_OK;
     }else if (pin_func == PIN_FUNC_GPIO) {
-        if (port_name == PORTA) {
+        if (pin_name <= PA31) {
             val = readl(HOBBIT_GIPO0_PORTCTL_REG);
-            val &= ~(pin_name);
+            val &= ~((uint32_t)1U << (uint32_t)pin_name);
             writel(val, HOBBIT_GIPO0_PORTCTL_REG);
         } else {
             val = readl(HOBBIT1_GIPO0_PORTCTL_REG);
-            val &= ~(pin_name);
+            val &= ~((uint32_t)1U << (uint32_t)(pin_name - 32));
             writel(val, HOBBIT1_GIPO0_PORTCTL_REG);
         }
-        if (port_name == PORTA) {
-            /* if gpio use gpio_func need clear af_sel */
-            if ((uint32_t)pin_name >= (uint32_t)PIN16 && (uint32_t)pin_name <= (uint32_t)PIN31) {
-                reg_mux0 = HOBBIT_IOMUX0H_REG;
-                offset = ((pin_name_t)((pin_name_t)offset - (pin_name_t)16U));
-            } else if ((uint32_t)pin_name < (uint32_t)PIN16){
-                reg_mux0 = HOBBIT_IOMUX0L_REG;
-            }
+        /* if gpio use gpio_func need clear af_sel */
+        if (pin_name >= PA16 && pin_name <= PA31) {
+            reg_mux0 = HOBBIT_IOMUX0H_REG;
+            pin_name = ((pin_name_t)((pin_name_t)pin_name - (pin_name_t)16U));
+        } else if (pin_name < PA16){
+            reg_mux0 = HOBBIT_IOMUX0L_REG;
+        } else if (pin_name >= PB0 && pin_name < PB16) {
+            reg_mux0 = HOBBIT1_IOMUX0L_REG;
+            pin_name = ((pin_name_t)((pin_name_t)pin_name - (pin_name_t)32U));
         } else {
-            if ((uint32_t)pin_name >= (uint32_t)PIN0 && (uint32_t)pin_name < (uint32_t)PIN16) {
-                reg_mux0 = HOBBIT1_IOMUX0L_REG;
-            } else {
-                reg_mux0 = HOBBIT1_IOMUX0H_REG;
-            }
+            reg_mux0 = HOBBIT1_IOMUX0H_REG;
+            pin_name = ((pin_name_t)((pin_name_t)pin_name - (pin_name_t)48U));
         }
 
-        reg_val = ((uint32_t)0x3U << ((uint8_t)offset * 2U));
+        reg_val = ((uint32_t)0x3U << ((uint8_t)pin_name * 2U));
         /* reuse function select */
         val = readl(reg_mux0);
         val &= ~(reg_val);
-        val |= ((uint32_t)0U << (2U * (uint8_t)offset));
+        val |= ((uint32_t)0U << (2U * (uint8_t)pin_name));
         writel(val, reg_mux0);
         ret = CSI_OK;
     }else{
-        if (port_name == PORTA) {
+        if (pin_name <= PA31) {
             val = readl(HOBBIT_GIPO0_PORTCTL_REG);
-            val |= pin_name;
+            val |= (uint32_t)1U << (uint32_t)pin_name;
             writel(val, HOBBIT_GIPO0_PORTCTL_REG);
         } else {
             val = readl(HOBBIT1_GIPO0_PORTCTL_REG);
-            val |= pin_name;
+            val |= (uint32_t)1U << (uint32_t)(pin_name - 32);
             writel(val, HOBBIT1_GIPO0_PORTCTL_REG);
         }
-        if (port_name == PORTA) {
-            if ((uint32_t)pin_name >= (uint32_t)PIN16 && (uint32_t)pin_name <= (uint32_t)PIN31) {
-                reg_mux0 = HOBBIT_IOMUX0H_REG;
-                offset = ((pin_name_t)((pin_name_t)offset - (pin_name_t)16U));
-            } else if ((uint32_t)pin_name < (uint32_t)PIN16) {
-                reg_mux0 = HOBBIT_IOMUX0L_REG;
-            }
+        if (pin_name >= PA16 && pin_name <= PA31) {
+            reg_mux0 = HOBBIT_IOMUX0H_REG;
+            pin_name = ((pin_name_t)((pin_name_t)pin_name - (pin_name_t)16U));
+        } else if (pin_name < PA16) {
+            reg_mux0 = HOBBIT_IOMUX0L_REG;
+        } else if (pin_name >= PB0 && pin_name < PB16) {
+            reg_mux0 = HOBBIT1_IOMUX0L_REG;
+            pin_name = ((pin_name_t)((pin_name_t)pin_name - (pin_name_t)32U));
         } else {
-            if ((uint32_t)pin_name >= (uint32_t)PIN0 && (uint32_t)pin_name < (uint32_t)PIN16) {
-                reg_mux0 = HOBBIT1_IOMUX0L_REG;
-            } else {
-                reg_mux0 = HOBBIT1_IOMUX0L_REG;
-            }
+            reg_mux0 = HOBBIT1_IOMUX0L_REG;
+            pin_name = ((pin_name_t)((pin_name_t)pin_name - (pin_name_t)48U));
         }
-        reg_val = ((uint32_t)0x3U << ((uint8_t)offset * 2U));
+
+        reg_val = ((uint32_t)0x3U << ((uint8_t)pin_name * 2U));
         /* reuse function select */
         val = readl(reg_mux0);
         val &= ~(reg_val);
-        val |= ((uint32_t)pin_func << (2U * (uint8_t)offset));
+        val |= ((uint32_t)pin_func << (2U * (uint8_t)pin_name));
         writel(val, reg_mux0);
         ret = CSI_OK;
     }
@@ -168,7 +149,7 @@ ATTRIBUTE_DATA csi_error_t csi_pin_set_mux(port_name_t port_name, pin_name_t pin
 }
 
 
-csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_gpio_mode_t mode)
+csi_error_t csi_pin_mode(pin_name_t pin_name, csi_gpio_mode_t mode)
 {
     uint32_t reg = 0U;
     uint32_t val = 0U;
@@ -180,45 +161,47 @@ csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_gpio_mo
             ret = CSI_UNSUPPORTED;
             break;
         case GPIO_MODE_PULLNONE:
-            if (port_name == PORTA) {
+            if (pin_name <= PA31) {
                 val = readl(HOBBIT_IOPD0_REG);
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT_IOPD0_REG);
                 }
                 val = readl(HOBBIT_IOPU0_REG);
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT_IOPU0_REG);
                 }
             } else {
+                pin_name = pin_name - 32;
                 val = readl(HOBBIT1_IOPD0_REG);
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT1_IOPD0_REG);
                 }
                 val = readl(HOBBIT1_IOPU0_REG);
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT1_IOPU0_REG);
                 }                
             }
             ret = CSI_OK;
             break;
         case GPIO_MODE_PULLUP:
-            if (port_name == PORTA) {
+            if (pin_name <= PA31) {
                 val = readl(HOBBIT_IOPD0_REG);
 
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT_IOPD0_REG);
                 }
                 reg = HOBBIT_IOPU0_REG;
             } else {
+                pin_name = pin_name - 32;
                 val = readl(HOBBIT1_IOPD0_REG);
 
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT1_IOPD0_REG);
                 }
                 reg = HOBBIT1_IOPU0_REG;  
@@ -227,19 +210,20 @@ csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_gpio_mo
             break;
 
         case GPIO_MODE_PULLDOWN:
-            if (port_name == PORTA) {
+            if (pin_name <= PA31) {
                 val = readl(HOBBIT_IOPU0_REG);
 
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT_IOPU0_REG);
                 }
                 reg = HOBBIT_IOPD0_REG;
             } else {
+                pin_name = pin_name - 32;
                 val = readl(HOBBIT1_IOPU0_REG);
 
-                if (val & (pin_name)) {
-                    val &= ~(pin_name);
+                if (val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(val, HOBBIT1_IOPU0_REG);
                 }
                 reg = HOBBIT1_IOPD0_REG;                
@@ -253,7 +237,7 @@ csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_gpio_mo
     if((ret == CSI_OK) && (mode != GPIO_MODE_PULLNONE))
     {
         val = readl(reg);
-        val |= (uint32_t)pin_name;
+        val |= (uint32_t)1U << (uint32_t)pin_name;
         writel(val, reg);
     }
     return ret;
@@ -265,26 +249,27 @@ csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_gpio_mo
   \param[in]   pin       refs to pin_name_e.
   \return      pin function count
 */
-pin_func_t csi_pin_get_mux(port_name_t port_name, pin_name_t   pin_name)
+pin_func_t csi_pin_get_mux(pin_name_t   pin_name)
 {
     uint32_t val = 0U;
     uint32_t reg_val = 0U;
     uint32_t reg_mux0 = 0U;
-    uint8_t offset = (uint8_t)get_shift_bit((uint32_t)pin_name);
+    uint8_t offset = (uint8_t)pin_name;
     uint32_t ret = 0U;
 
     /* gpio data source select */
-    if (port_name == PORTA) {
+    if (pin_name <= PA31) {
         val = readl(HOBBIT_GIPO0_PORTCTL_REG);
         val &= ((uint32_t)1U << offset);
 
         if (val != ((uint32_t)1U << offset) ) {
             ret = (uint32_t)PIN_FUNC_GPIO;
         }else{
-            if ((uint32_t)pin_name >= (uint32_t)PIN16) {
-                offset = (uint8_t)offset - 16U;
+            if (pin_name >= PA16) {
+                offset = (uint8_t)pin_name - 16U;
                 reg_mux0 = HOBBIT_IOMUX0H_REG;
             } else {
+                offset = (uint8_t)pin_name;
                 reg_mux0 = HOBBIT_IOMUX0L_REG;
             }
 
@@ -302,10 +287,11 @@ pin_func_t csi_pin_get_mux(port_name_t port_name, pin_name_t   pin_name)
         if (val != ((uint32_t)1U << offset) ) {
             ret = (uint32_t)PIN_FUNC_GPIO;
         }else{
-            if ((uint32_t)pin_name >= (uint32_t)PIN16) {
-                offset = (uint8_t)offset - 16U;
+            if (pin_name >= PB16) {
+                offset = (uint8_t)pin_name - 48U;
                 reg_mux0 = HOBBIT1_IOMUX0H_REG;
             } else {
+                offset = (uint8_t)pin_name - 32U;
                 reg_mux0 = HOBBIT1_IOMUX0L_REG;
             }
 
@@ -325,7 +311,7 @@ pin_func_t csi_pin_get_mux(port_name_t port_name, pin_name_t   pin_name)
   \param[in]   speed    io speed
   \return      error code
 */
-csi_error_t csi_pin_speed(port_name_t port_name, pin_name_t pin_name, csi_pin_speed_t speed)
+csi_error_t csi_pin_speed(pin_name_t pin_name, csi_pin_speed_t speed)
 {
     uint32_t reg_val = 0U;
     csi_error_t ret = CSI_OK;
@@ -333,26 +319,27 @@ csi_error_t csi_pin_speed(port_name_t port_name, pin_name_t pin_name, csi_pin_sp
     if (speed > PIN_SPEED_LV1) {
         ret = CSI_UNSUPPORTED;
     }else{
-        if (port_name == PORTA) {
+        if (pin_name <= PA31) {
             reg_val =  readl(HOBBIT_IOSR0_REG);
             if (speed == PIN_SPEED_LV0) {
-                if (reg_val & (pin_name)) {
-                    reg_val &= ~(pin_name);
+                if (reg_val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    reg_val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(reg_val, HOBBIT_IOSR0_REG);
                 }
             } else {
-                reg_val |= pin_name;
+                reg_val |= (uint32_t)1U << (uint32_t)pin_name;
                 writel(reg_val, HOBBIT_IOSR0_REG);
             }
         } else {
             reg_val =  readl(HOBBIT1_IOSR0_REG);
+            pin_name = pin_name - 32;
             if (speed == PIN_SPEED_LV0) {
-                if (reg_val & (pin_name)) {
-                    reg_val &= ~(pin_name);
+                if (reg_val & ((uint32_t)1U << (uint32_t)pin_name)) {
+                    reg_val &= ~((uint32_t)1U << (uint32_t)pin_name);
                     writel(reg_val, HOBBIT1_IOSR0_REG);
                 }
             } else {
-                reg_val |= pin_name;
+                reg_val |= (uint32_t)1U << (uint32_t)pin_name;
                 writel(reg_val, HOBBIT1_IOSR0_REG);
             }            
         }
@@ -368,37 +355,34 @@ csi_error_t csi_pin_speed(port_name_t port_name, pin_name_t pin_name, csi_pin_sp
   \param[in]   drive    io drive
   \return      error code
 */
-csi_error_t csi_pin_drive(port_name_t port_name, pin_name_t pin_name, csi_pin_drive_t drive)
+csi_error_t csi_pin_drive(pin_name_t pin_name, csi_pin_drive_t drive)
 {
     uint32_t val = 0U;
     uint32_t reg_val = 0U;
     uint32_t reg_mux0 = 0U;
-    uint32_t offset = get_shift_bit((uint32_t)pin_name);
-    if (port_name == PORTA) {
-        if ((uint32_t)pin_name >= (uint32_t)PIN16 && (uint32_t)pin_name <= (uint32_t)PIN31) {
-            reg_mux0 = HOBBIT_IODS0H_REG;
-            offset = offset - 16;
-        } else if ((uint32_t)pin_name < (uint32_t)PIN16){
-            reg_mux0 = HOBBIT_IODS0L_REG;
-        }
+
+    if (pin_name >= PA16 && pin_name <= PA31) {
+        reg_mux0 = HOBBIT_IODS0H_REG;
+        pin_name = pin_name - 16;
+    } else if (pin_name < PA16){
+        reg_mux0 = HOBBIT_IODS0L_REG;
+    } else if (pin_name >= PB0 && pin_name < PB16) {
+        reg_mux0 = HOBBIT1_IODS0L_REG;
+        pin_name = pin_name - 32;
     } else {
-        if ((uint32_t)pin_name >= (uint32_t)PIN0 && (uint32_t)pin_name < (uint32_t)PIN16) {
-            reg_mux0 = HOBBIT1_IODS0L_REG;
-        } else {
-            reg_mux0 = HOBBIT1_IODS0H_REG;
-            offset = offset - 16;
-        }
+        reg_mux0 = HOBBIT1_IODS0H_REG;
+        pin_name = pin_name - 48;
     }
-    reg_val = ((uint32_t)0x3U << ((uint8_t)offset * 2U));
+    reg_val = ((uint32_t)0x3U << ((uint8_t)pin_name * 2U));
     /* reuse function select */
     val = readl(reg_mux0);
     val &= ~(reg_val);
-    val |= ((uint32_t)drive << (2U * (uint8_t)offset));
+    val |= ((uint32_t)drive << (2U * (uint8_t)pin_name));
     writel(val, reg_mux0);
     return CSI_OK;
 }
 
-csi_error_t csi_pin_wakeup(port_name_t port_name, pin_name_t pin_name, bool enable)
+csi_error_t csi_pin_wakeup(pin_name_t pin_name, bool enable)
 {
     return CSI_OK;
 }

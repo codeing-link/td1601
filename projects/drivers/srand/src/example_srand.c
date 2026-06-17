@@ -14,7 +14,7 @@
 #include <soc.h>
 #include <drv/efuse.h>
 #include "board_init.h"
-#include "drv/tick.h"
+
 static csi_efuse_t efuse;
 static void example_srand(void)
 {

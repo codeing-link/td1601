@@ -16,7 +16,7 @@
 
 #include "dw_gpio_ll.h"
 
-extern csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_gpio_mode_t mode);
+extern csi_error_t csi_pin_mode(pin_name_t pin_name, csi_gpio_mode_t mode);
 
 static void dw_gpio_irqhandler(void *args)
 {
@@ -114,7 +114,7 @@ csi_error_t csi_gpio_mode(csi_gpio_t *gpio, uint32_t pin_mask, csi_gpio_mode_t m
             pin_name = csi_pin_get_pinname_by_gpio(gpio->dev.idx, offset);
 
             if ((uint8_t)pin_name != 0xFFU) {
-                temp = csi_pin_mode((port_name_t)gpio->dev.idx, pin_name, mode);
+                temp = csi_pin_mode(pin_name, mode);
 
                 if (temp == CSI_ERROR) { /* return CSI_ERROR if csi_pin_mode return CSI_ERROR */
                     ret = CSI_ERROR;

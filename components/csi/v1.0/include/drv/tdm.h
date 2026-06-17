@@ -287,6 +287,13 @@ int32_t csi_tdm_send(csi_tdm_t *tdm, const void *data, uint32_t size);
 csi_error_t csi_tdm_receive_start(csi_tdm_t *tdm);
 
 /**
+  \brief       receive data with sync mode
+  \param[in]   tdm     Operate handle
+  \return      error code \ref csi_error_t
+*/
+int32_t csi_tdm_receive_start(csi_tdm_t *tdm);
+
+/**
   \brief       Start tdm single tdm asynchronous send
   \param[in]   tdm     Operate handle
   \return      error code \ref csi_error_t

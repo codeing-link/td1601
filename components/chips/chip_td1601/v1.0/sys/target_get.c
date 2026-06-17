@@ -52,13 +52,13 @@ csi_error_t target_get(csi_dev_tag_t dev_tag, uint32_t idx, csi_dev_t *dev)
     return ret;
 }
 
-uint32_t target_pin_to_devidx(port_name_t port_name, pin_name_t pin_name, const  csi_pinmap_t *pinmap)
+uint32_t target_pin_to_devidx(pin_name_t pin_name, const  csi_pinmap_t *pinmap)
 {
     const csi_pinmap_t *map = pinmap;
     uint32_t ret = 0xFFFFFFFFU;
 
     while ((uint32_t)map->pin_name != 0xFFFFFFFFU) {
-        if ((map->pin_name == pin_name) && (map->port_name == port_name) && (csi_pin_get_mux(port_name, pin_name) == map->pin_func)) {
+        if ((map->pin_name == pin_name) && (csi_pin_get_mux(pin_name) == map->pin_func)) {
             ret = map->idx;
             break;
         }
@@ -69,13 +69,13 @@ uint32_t target_pin_to_devidx(port_name_t port_name, pin_name_t pin_name, const 
     return ret;
 }
 
-uint32_t target_pin_to_index(port_name_t port_name, pin_name_t pin_name, const csi_pinmap_t *pinmap)
+uint32_t target_pin_to_index(pin_name_t pin_name, const csi_pinmap_t *pinmap)
 {
     const csi_pinmap_t *map = pinmap;
     uint32_t ret = 0xFFFFFFFFU;
 
     while ((uint32_t)map->pin_name != 0xFFFFFFFFU) {
-        if ((map->pin_name == pin_name) && (map->port_name == port_name)) {
+        if (map->pin_name == pin_name) {
             ret = (uint32_t)map->idx;
             break;
         }
@@ -86,13 +86,13 @@ uint32_t target_pin_to_index(port_name_t port_name, pin_name_t pin_name, const c
     return ret;
 }
 
-uint32_t target_pin_to_channel(port_name_t port_name, pin_name_t pin_name, const csi_pinmap_t *pinmap)
+uint32_t target_pin_to_channel(pin_name_t pin_name, const csi_pinmap_t *pinmap)
 {
     const csi_pinmap_t *map = pinmap;
     uint32_t ret = 0xFFFFFFFFU;
 
     while ((uint32_t)map->pin_name != 0xFFFFFFFFU) {
-        if ((map->pin_name == pin_name) && (map->port_name == port_name)) {
+        if (map->pin_name == pin_name) {
             ret = (uint32_t)map->channel;
             break;
         }

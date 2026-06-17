@@ -892,8 +892,7 @@ static csi_error_t iic_master_send_dma(csi_iic_t *iic, uint32_t devaddr, const v
     config.src_tw = DMA_DATA_WIDTH_8_BITS;
     config.dst_tw = DMA_DATA_WIDTH_8_BITS;
     /* config for wj_dma */
-    // config.group_len = (uint16_t)dw_iic_find_max_prime_num(size);
-    config.group_len = 1;
+    config.group_len = (uint16_t)dw_iic_find_max_prime_num(size);
     config.trans_dir = DMA_MEM2PERH;
     /* config for etb */
     config.handshake = iic_tx_hs_num[iic->dev.idx];
@@ -1375,8 +1374,7 @@ static csi_error_t iic_slave_send_dma(csi_iic_t *iic, const void *data, uint32_t
     config.src_tw = DMA_DATA_WIDTH_8_BITS;
     config.dst_tw = DMA_DATA_WIDTH_8_BITS;
     /* config for wj_dma */
-    // config.group_len = 4U;
-    config.group_len = 1U;
+    config.group_len = 4U;
     config.trans_dir = DMA_MEM2PERH;
     /* config for etb */
     config.handshake = iic_tx_hs_num[iic->dev.idx];
@@ -1511,8 +1509,7 @@ static csi_error_t iic_slave_receive_dma(csi_iic_t *iic, void *data, uint32_t si
     config.dst_inc = DMA_ADDR_INC;
     config.src_tw = DMA_DATA_WIDTH_8_BITS;
     config.dst_tw = DMA_DATA_WIDTH_8_BITS;
-    // config.group_len = dw_iic_find_max_prime_num(size);
-    config.group_len = 1;
+    config.group_len = dw_iic_find_max_prime_num(size);
     config.trans_dir = DMA_PERH2MEM;
     config.handshake = iic_rx_hs_num[iic->dev.idx];
 

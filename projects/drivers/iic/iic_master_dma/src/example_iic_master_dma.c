@@ -40,8 +40,8 @@ static void iic_event_cb_fun(csi_iic_t *iic, csi_iic_event_t event, void *arg)
 
 void example_pin_iic_init(void)
 {
-    csi_pin_set_mux(EXAMPLE_PIN_IIC_SDA_PORT, EXAMPLE_PIN_IIC_SDA, EXAMPLE_PIN_IIC_SDA_FUNC);
-    csi_pin_set_mux(EXAMPLE_PIN_IIC_SCL_PORT, EXAMPLE_PIN_IIC_SCL, EXAMPLE_PIN_IIC_SCL_FUNC);
+    csi_pin_set_mux(EXAMPLE_PIN_IIC_SDA, EXAMPLE_PIN_IIC_SDA_FUNC);
+    csi_pin_set_mux(EXAMPLE_PIN_IIC_SCL, EXAMPLE_PIN_IIC_SCL_FUNC);
 }
 
 int test_iic_eeprom(int32_t iic_idx)
@@ -168,7 +168,7 @@ int example_iic(int32_t iic_idx)
 int main(void)
 {
     board_init();
-	printf("test_iic_eeprom startl\n");
+
     return example_iic(EXAMPLE_IIC_IDX);
 }
 

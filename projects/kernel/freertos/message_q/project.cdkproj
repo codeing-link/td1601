@@ -155,7 +155,6 @@
 				<LibPath />
 				<OtherFlags />
 				<AutoLDFile>no</AutoLDFile>
-				<LinkType>whole-archive</LinkType>
 			</Linker>
 			<Debug>
 				<LoadApplicationAtStartup>yes</LoadApplicationAtStartup>

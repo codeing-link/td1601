@@ -1,0 +1,2 @@
+#set $mstatus=0x2000
+#download bin verify=yes address=0x18008000 ./src/Nstar-480320.bin

@@ -16,7 +16,6 @@
 extern "C" {
 #endif
 
-#define ZB25VQ128D
 #define P25Q40UDWF
 #define W25Q64FV
 #define MX25L12833F

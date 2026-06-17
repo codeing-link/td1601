@@ -1,3 +1,0 @@
-sreset -c 0x2
-set $mstatus=0x2000
-set $mhcr=0

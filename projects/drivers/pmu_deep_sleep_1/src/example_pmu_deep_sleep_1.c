@@ -95,7 +95,7 @@ int32_t test_pmu_deep_sleep_1_mode(void)
     (void)ret;
     config_rtc_wakeup_source(RTC_ALARM_DELAY);
 #else
-    printf("please change the wakeup pin %s to gnd\n", EXAMPLE_BOARD_WAKEUP_PIN_NAME);
+    printf("please change the wakeup pin %s to low\n", EXAMPLE_BOARD_WAKEUP_PIN_NAME);
     ret = csi_pm_config_wakeup_source(EXAMPLE_WAKEUP_NUM, true);
 
     if (ret < 0) {
@@ -156,8 +156,8 @@ int32_t test_pmu_deep_sleep_1_mode(void)
 
 int example_pmu(void)
 {
-    csi_pin_set_mux(WAKEUP_PIN_PORT, WAKEUP_PIN, WAKEUP_PIN_FUNC);
-    csi_pin_wakeup(WAKEUP_PIN_PORT, WAKEUP_PIN, 1);
+    csi_pin_set_mux(WAKEUP_PIN, WAKEUP_PIN_FUNC);
+    csi_pin_wakeup(WAKEUP_PIN, 1);
     test_pmu_deep_sleep_1_mode();
     return 0;
 }

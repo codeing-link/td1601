@@ -15,7 +15,7 @@
 #include <drv/common.h>
 
 #ifndef CONFIG_SYSTICK_HZ
-#define CONFIG_SYSTICK_HZ  1000U
+#define CONFIG_SYSTICK_HZ  100U
 #endif
 
 #ifdef __cplusplus

@@ -19,7 +19,7 @@ static csi_pwm_t g_pwm_handle;
 
 void  pwm_output_pinmux_init(void)
 {
-    csi_pin_set_mux(PORTA, EXAMPLE_PWM_CH, EXAMPLE_PWM_CH_FUNC);
+    csi_pin_set_mux(EXAMPLE_PWM_CH, EXAMPLE_PWM_CH_FUNC);
 }
 
 int32_t  pwm_signal_output(void)

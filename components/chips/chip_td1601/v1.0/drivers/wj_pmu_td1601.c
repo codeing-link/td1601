@@ -28,7 +28,7 @@
 #define CSKY_SOC_WAKEUP_REG0        (WJ_IOC_BASE + 0x18)
 #define CSKY_SOC_WAKEUP_LEVEL       (WJ_IOC_BASE + 0x78)
 
-#define WAKEUP_IO       PIN4
+#define WAKEUP_IO       PA4
 #ifdef CONFIG_CHIP_DANICA
 #undef CONFIG_TEE_CA
 #endif
@@ -361,7 +361,7 @@ csi_error_t soc_pm_config_wakeup_source(uint32_t wakeup_num, bool enable)
             csi_vic_set_wakeup_irq(CONFIG_VIC_WAKEUP_BIT);
 
             if (wakeup_num == WJ_IOCTL_Wakeupn) {
-                putreg32(WAKEUP_IO, (uint32_t *)CSKY_SOC_WAKEUP_REG0);
+                putreg32(1U << WAKEUP_IO, (uint32_t *)CSKY_SOC_WAKEUP_REG0);
                 putreg32(0U, (uint32_t *)CSKY_SOC_WAKEUP_LEVEL);
             }
 

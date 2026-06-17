@@ -20,8 +20,8 @@ int32_t console_init(sys_console_t *handle)
 
     extern csi_uart_t console_uart;
 
-    csi_pin_set_mux(handle->tx.port, handle->tx.pin, handle->tx.func);
-    csi_pin_set_mux(handle->rx.port, handle->rx.pin, handle->rx.func);
+    csi_pin_set_mux(handle->tx.pin, handle->tx.func);
+    csi_pin_set_mux(handle->rx.pin, handle->rx.func);
 
     ret = csi_uart_init(&console_uart, handle->uart_id);
 

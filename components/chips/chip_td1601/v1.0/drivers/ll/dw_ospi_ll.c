@@ -38,6 +38,18 @@ uint32_t dw_ospi_get_data_frame_len(dw_ospi_regs_t *ospi_base)
     return len;
 }
 
+void dw_ospi_config_data_frame_len(dw_ospi_regs_t *ospi_base, uint32_t size)
+{
+    uint32_t temp;
+
+    if ((size >= 4U) & (size <= 16U)) {
+        temp = ospi_base->CTRLR0;
+        temp &= ~DW_OSPI_CTRLR0_DFS_Msk;
+        temp |= ((size - 1U) << DW_OSPI_CTRLR0_DFS_Pos);
+        ospi_base->CTRLR0 = temp;
+    }
+}
+
 void dw_ospi_reset_regs(dw_ospi_regs_t *ospi_base)
 {
     ospi_base->CTRLR0   = 7U;

@@ -52,8 +52,8 @@ void  pwm_event_cb_fun(csi_pwm_t *pwm_handle, csi_pwm_event_t event, uint8_t ch,
 
 void pwm_capture_pinmux_init(void)
 {
-    csi_pin_set_mux(EXAMPLE_PWM_CAPTURE_GPIO_PIN_PORT, EXAMPLE_PWM_CAPTURE_GPIO_PIN, EXAMPLE_PWM_CAPTURE_GPIO_PIN_FUNC);
-    csi_pin_set_mux(EXAMPLE_PWM_CAPTURE_CH_PORT, EXAMPLE_PWM_CAPTURE_CH, EXAMPLE_PWM_CAPTURE_CH_FUNC);
+    csi_pin_set_mux(EXAMPLE_PWM_CAPTURE_GPIO_PIN, EXAMPLE_PWM_CAPTURE_GPIO_PIN_FUNC);
+    csi_pin_set_mux(EXAMPLE_PWM_CAPTURE_CH, EXAMPLE_PWM_CAPTURE_CH_FUNC);
 }
 
 int32_t pwm_signal_capture(void)

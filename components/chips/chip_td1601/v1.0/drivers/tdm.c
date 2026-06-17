@@ -303,7 +303,7 @@ TDM_CODE_IN_RAM void wj_tdm_dma_event_cb(csi_dma_ch_t *dma, csi_dma_event_t even
 {
     CSI_PARAM_CHK_NORETVAL(dma);
     csi_tdm_t *tdm = (csi_tdm_t *)dma->parent;
-    // wj_tdm_regs_t *tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
+    wj_tdm_regs_t *tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
     if (event == DMA_EVENT_TRANSFER_ERROR) { /* DMA transfer ERROR */
         if (tdm->rx_dma->ch_id == dma->ch_id) {
             /* to do rx error action */
@@ -322,7 +322,6 @@ TDM_CODE_IN_RAM void wj_tdm_dma_event_cb(csi_dma_ch_t *dma, csi_dma_event_t even
 
     } else if (event == DMA_EVENT_TRANSFER_DONE) {
         if ((tdm->tx_dma != NULL) && (tdm->tx_dma->ch_id == dma->ch_id)) {
-#if 0
             uint32_t read_len = tdm->tx_period;
 
             if (tdm->tx_buf->data_len <= tdm->tx_period) {
@@ -353,14 +352,8 @@ TDM_CODE_IN_RAM void wj_tdm_dma_event_cb(csi_dma_ch_t *dma, csi_dma_event_t even
                     tdm->callback(tdm, TDM_EVENT_SEND_COMPLETE, tdm->arg);
                 }
             }
-#endif
-                // while(!(wj_tdm_get_fifo_status(tdm_base) & WJ_TDM_FIFO_STATUS_TXFIFO_EMPTY_Msk));
-                if (tdm->callback) {
-                    tdm->callback(tdm, TDM_EVENT_SEND_COMPLETE, tdm->arg);
-                }
-        } else if ((tdm->rx_dma != NULL) && (tdm->rx_dma->ch_id == dma->ch_id)) {
+        } else {
             /* to do rx action */
-#if 0
             uint32_t write_len = tdm->rx_period;
             tdm->rx_buf->write = (tdm->rx_buf->write + write_len) % tdm->rx_buf->size;
             tdm->rx_buf->data_len += write_len;
@@ -393,8 +386,6 @@ TDM_CODE_IN_RAM void wj_tdm_dma_event_cb(csi_dma_ch_t *dma, csi_dma_event_t even
             } else {
                 tdm->callback(tdm, TDM_EVENT_RX_BUFFER_FULL, tdm->arg);
             }
-#endif
-            tdm->callback(tdm, TDM_EVENT_RECEIVE_COMPLETE, tdm->arg);
         }
 
     }
@@ -420,11 +411,10 @@ csi_error_t csi_tdm_init(csi_tdm_t *tdm, uint32_t idx)
     tdm->state.writeable = 1U;
     tdm->priv = (void *)0U;
     tdm->callback = NULL;
+    csi_pin_set_mux(PA10,   PA10_I2S0_MCLK);
+    csi_pin_set_mux(PA6,   PA6_I2S0_SCLK);
+    csi_pin_set_mux(PA7,  PA7_I2S0_WSCLK);
 #if 1
-    csi_pin_set_mux(PORTA, PIN10,   PA10_I2S0_MCLK);
-    // csi_pin_set_mux(PORTA, PIN6,   PA6_I2S0_SCLK);
-    // csi_pin_set_mux(PORTA, PIN7,  PA7_I2S0_WSCLK);
-
     *(volatile uint32_t *)0x50040008=0x100;
     *(volatile uint32_t *)0x50040090=0x7;
     *(volatile uint32_t *)0x50040098=0xf;
@@ -472,14 +462,10 @@ void csi_tdm_enable(csi_tdm_t *tdm, bool enable)
         wj_tdm_enable(tdm_base);
         wj_ip_ctrl_tdm_enable(PMU_REG_BASE);
         wj_tdm_sclk_enable(tdm_base);
-        csi_pin_set_mux(PORTA, PIN6,   PA6_I2S0_SCLK);
-        csi_pin_set_mux(PORTA, PIN7,  PA7_I2S0_WSCLK);
     } else {
         wj_tdm_disable(tdm_base);
         wj_ip_ctrl_tdm_disable(PMU_REG_BASE);
         wj_tdm_sclk_disable(tdm_base);
-        csi_pin_set_mux(PORTA, PIN6,   PIN_FUNC_GPIO);
-        csi_pin_set_mux(PORTA, PIN7,  PIN_FUNC_GPIO);
     }
 }
 
@@ -495,7 +481,7 @@ csi_error_t csi_tdm_format(csi_tdm_t *tdm, csi_tdm_format_t *format)
     wj_ip_ctrl_tdm_disable(PMU_REG_BASE);
     switch (format->mode) {
         case TDM_MODE_MASTER:
-            wj_tdm_slave_mode(tdm_base);
+            wj_tdm_master_mode(tdm_base);
             break;
 
         case TDM_MODE_SLAVE:
@@ -568,6 +554,64 @@ csi_error_t csi_tdm_format(csi_tdm_t *tdm, csi_tdm_format_t *format)
         wj_tdm_i2s_mode(tdm_base);
     }
     // wj_tdm_div0_level(tdm_base, soc_get_audio_clk(0U) / (format->rate * format->sclk_nfs));
+
+    return ret;
+}
+
+csi_error_t csi_tdm_rx_link_dma(csi_tdm_t *tdm, csi_dma_ch_t *rx_dma)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+
+    if (rx_dma != NULL) {
+        rx_dma->parent = tdm;
+        ret = csi_dma_ch_alloc(rx_dma, -1, -1);
+
+        if (ret == CSI_OK) {
+            csi_dma_ch_attach_callback(rx_dma, wj_tdm_dma_event_cb, NULL);
+            tdm->rx_dma = rx_dma;
+        } else {
+            rx_dma->parent = NULL;
+            ret = CSI_ERROR;
+        }
+    } else {
+        if (tdm->rx_dma) {
+            csi_dma_ch_detach_callback(tdm->rx_dma);
+            csi_dma_ch_free(tdm->rx_dma);
+            tdm->rx_dma = NULL;
+        } else {
+            ret = CSI_ERROR;
+        }
+    }
+
+    return ret;
+}
+
+csi_error_t csi_tdm_tx_link_dma(csi_tdm_t *tdm, csi_dma_ch_t *tx_dma)
+{
+    CSI_PARAM_CHK(tdm, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+
+    if (tx_dma != NULL) {
+        tx_dma->parent = tdm;
+        ret = csi_dma_ch_alloc(tx_dma, -1, -1);
+
+        if (ret == CSI_OK) {
+            csi_dma_ch_attach_callback(tx_dma, wj_tdm_dma_event_cb, NULL);
+            tdm->tx_dma = tx_dma;
+        } else {
+            tx_dma->parent = NULL;
+            ret = CSI_ERROR;
+        }
+    } else {
+        if (tdm->tx_dma) {
+            csi_dma_ch_detach_callback(tdm->tx_dma);
+            csi_dma_ch_free(tdm->tx_dma);
+            tdm->tx_dma = NULL;
+        } else {
+            ret = CSI_ERROR;
+        }
+    }
 
     return ret;
 }
@@ -709,9 +753,8 @@ int32_t csi_tdm_receive(csi_tdm_t *tdm, void *data, uint32_t size)
     return read_size;
 }
 
-csi_error_t wj_tdm_send_dma(csi_tdm_t *tdm, const void *data, uint32_t size)
+uint32_t csi_tdm_send_dma(csi_tdm_t *tdm, const void *data, uint32_t size)
 {
-#if 0
     CSI_PARAM_CHK(tdm, CSI_ERROR);
     CSI_PARAM_CHK(data, CSI_ERROR);
     uint32_t write_len;
@@ -743,56 +786,6 @@ csi_error_t wj_tdm_send_dma(csi_tdm_t *tdm, const void *data, uint32_t size)
     }
 
     return write_len;
-#else
-    CSI_PARAM_CHK(tdm, CSI_ERROR);
-    csi_error_t ret = CSI_OK;
-    csi_dma_ch_config_t config;
-    memset(&config, 0, sizeof(csi_dma_ch_config_t));
-    wj_tdm_regs_t *tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-    csi_dma_ch_t *dma_ch = (csi_dma_ch_t *)tdm->tx_dma;
-    tdm->tx_data = (uint8_t *)data;
-    uint32_t frame_len   = wj_tdm_get_slot_width_mode(tdm_base);
-    if (frame_len <= 1) {
-        tdm->tx_size = size;
-        config.src_tw = DMA_DATA_WIDTH_8_BITS;
-        config.dst_tw = DMA_DATA_WIDTH_8_BITS;
-    } else if (frame_len <= 3) {
-        tdm->tx_size = size / 2U;
-        config.src_tw = DMA_DATA_WIDTH_16_BITS;
-        config.dst_tw = DMA_DATA_WIDTH_16_BITS;
-    } else {
-        ret = CSI_ERROR;
-    }
-
-    // wj_tdm_disable(tdm_base);
-    // wj_ip_ctrl_tdm_disable(PMU_REG_BASE);
-    wj_tdm_set_txdma_data_level(tdm_base, 0U);
-    wj_tdm_txdma_enable(tdm_base);
-
-    config.src_inc = DMA_ADDR_INC;
-    config.dst_inc = DMA_ADDR_CONSTANT;
-    /* config for wj_dma */
-    config.group_len = 1U;
-    config.trans_dir = DMA_MEM2PERH;
-    config.src_reload_en = 0U;
-    config.dst_reload_en = 0U;
-    config.half_int_en = 0U;
-    /* config for etb */
-    config.handshake = tdm_tx_hs_num[tdm->dev.idx];
-
-    wj_tdm_enable(tdm_base);
-    wj_ip_ctrl_tdm_enable(PMU_REG_BASE);
-    wj_tdm_sclk_enable(tdm_base);
-    // csi_pin_set_mux(PORTA, PIN6,   PA6_I2S0_SCLK);
-    // *(volatile uint32_t *)0x50040000=0x1;
-    // wj_tdm_flush_txfifo(tdm_base);
-    // memset(tdm->tx_buf->buffer, 0, tdm->tx_buf->size);
-    ret = csi_dma_ch_config(dma_ch, &config);
-    soc_dcache_clean_invalid_range((unsigned long)tdm->tx_data, size);
-    csi_dma_ch_start(tdm->tx_dma, tdm->tx_data, (void *) & (tdm_base->TDM_TXFIFO_DATA), tdm->tx_size);
-    tdm->state.writeable = 1U;
-    return ret;
-#endif
 }
 
 csi_error_t csi_tdm_send_async(csi_tdm_t *tdm, const void *data, uint32_t size)
@@ -932,9 +925,8 @@ int32_t csi_tdm_send(csi_tdm_t *tdm, const void *data, uint32_t size)
     return write_size;
 }
 
-csi_error_t wj_tdm_receive_dma(csi_tdm_t *tdm, void *data, uint32_t size)
+uint32_t csi_tdm_receive_dma(csi_tdm_t *tdm, void *data, uint32_t size)
 {
-#if 0
     CSI_PARAM_CHK(tdm, 0U);
     CSI_PARAM_CHK(data, 0U);
     uint32_t read_len;
@@ -943,59 +935,6 @@ csi_error_t wj_tdm_receive_dma(csi_tdm_t *tdm, void *data, uint32_t size)
     read_len = csi_ringbuffer_out(tdm->rx_buf, (void *)data, size);
     csi_irq_restore(result);
     return read_len;
-#else
-    CSI_PARAM_CHK(tdm, CSI_ERROR);
-    csi_error_t ret = CSI_OK;
-    csi_dma_ch_config_t config;
-    memset(&config, 0U, sizeof(csi_dma_ch_config_t));
-    wj_tdm_regs_t *tdm_base;
-    tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-
-    tdm->rx_data = (uint8_t *)data;
-    uint32_t frame_len   = wj_tdm_get_slot_width_mode(tdm_base);
-    if (frame_len <= 1) {
-        tdm->rx_size = size;
-        config.src_tw = DMA_DATA_WIDTH_8_BITS;
-        config.dst_tw = DMA_DATA_WIDTH_8_BITS;
-    } else if (frame_len <= 3) {
-        tdm->rx_size = size / 2U;
-        config.src_tw = DMA_DATA_WIDTH_16_BITS;
-        config.dst_tw = DMA_DATA_WIDTH_16_BITS;
-    } else {
-        ret = CSI_ERROR;
-    }
-    csi_dma_ch_t *dma_ch = (csi_dma_ch_t *)tdm->rx_dma;
-
-
-    // wj_tdm_set_rxdma_data_level(tdm_base, 0U);
-    wj_tdm_set_rxdma_data_level(tdm_base, WJ_DEFAULT_TDM_RXFIFO_LV);
-    wj_tdm_rxdma_enable(tdm_base);
-
-    config.src_inc = DMA_ADDR_CONSTANT;
-    config.dst_inc = DMA_ADDR_INC;
-    /* config for wj_dma */
-    config.group_len = 1U;
-    config.trans_dir = DMA_PERH2MEM;
-    config.src_reload_en = 0U;
-    config.dst_reload_en = 0U;
-    config.half_int_en = 0U;
-    /* config for etb */
-    config.handshake = tdm_rx_hs_num[tdm->dev.idx];
-
-    wj_tdm_enable(tdm_base);
-    wj_ip_ctrl_tdm_enable(PMU_REG_BASE);
-    wj_tdm_sclk_enable(tdm_base);
-    // csi_pin_set_mux(PORTA, PIN6,   PA6_I2S0_SCLK);
-    // *(volatile uint32_t *)0x50040000=0x1;
-    // memset(tdm->rx_buf->buffer, 0, tdm->rx_buf->size);
-    ret = csi_dma_ch_config(dma_ch, &config);
-
-    // wj_tdm_flush_rxfifo(tdm_base);
-    soc_dcache_clean_invalid_range((unsigned long)tdm->rx_data, size);
-    csi_dma_ch_start(tdm->rx_dma, (void *) & (tdm_base->TDM_RXFIFO_DATA), tdm->rx_data, tdm->rx_size);
-    tdm->state.readable = 1U;
-    return ret;
-#endif
 }
 
 csi_error_t csi_tdm_receive_async(csi_tdm_t *tdm, void *data, uint32_t size)
@@ -1059,12 +998,7 @@ csi_error_t csi_tdm_send_pause(csi_tdm_t *tdm)
 {
     CSI_PARAM_CHK(tdm, CSI_ERROR);
     csi_error_t ret = CSI_OK;
-    // csi_dma_ch_stop(tdm->tx_dma);
-    wj_tdm_regs_t *tdm_base;
-    tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-    csi_pin_set_mux(PORTA, PIN6,   PIN_FUNC_GPIO);
-    csi_pin_set_mux(PORTA, PIN7,  PIN_FUNC_GPIO);
-    wj_tdm_txdma_disable(tdm_base);
+    csi_dma_ch_stop(tdm->tx_dma);
     tdm->state.writeable = 0U;
     return ret;
 }
@@ -1074,9 +1008,8 @@ csi_error_t csi_tdm_send_resume(csi_tdm_t *tdm)
     CSI_PARAM_CHK(tdm, CSI_ERROR);
     csi_error_t ret = CSI_OK;
     wj_tdm_regs_t *tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-#if 0
     uint32_t tx_num = 0U;
-
+#if 0
     uint32_t TX_FIFO[16];
     uint32_t send_fifo_level = 0U;
     uint32_t emptyfifo = 0U;
@@ -1089,7 +1022,7 @@ csi_error_t csi_tdm_send_resume(csi_tdm_t *tdm)
         for (tx_num = 0U; tx_num < emptyfifo; tx_num ++) {
             wj_tdm_transmit_data((wj_tdm_regs_t *)tdm->dev.reg_base, TX_FIFO[tx_num]);
         }
-
+#endif
         soc_dcache_clean_invalid_range((unsigned long)(tdm->tx_buf->buffer + tdm->tx_buf->read + (tx_num << 2U)), tdm->tx_period - (tx_num << 2U));
         csi_dma_ch_start(tdm->tx_dma, tdm->tx_buf->buffer + tdm->tx_buf->read + (tx_num << 2U), (void *) & (tdm_base->TDM_TXFIFO_DATA), tdm->tx_period - (tx_num << 2U));
     // } else {
@@ -1097,10 +1030,6 @@ csi_error_t csi_tdm_send_resume(csi_tdm_t *tdm)
     //     csi_dma_ch_start(tdm->tx_dma, (tdm->tx_buf->buffer + tdm->tx_buf->read), (void *) & (tdm_base->TDM_TXFIFO_DATA), tdm->tx_period);
     //     wj_tdm_get_transmit_fifo_level(tdm_base);
     // }
-#endif
-    wj_tdm_txdma_enable(tdm_base);
-    csi_pin_set_mux(PORTA, PIN6,   PA6_I2S0_SCLK);
-    csi_pin_set_mux(PORTA, PIN7,  PA7_I2S0_WSCLK);
 
     tdm->state.writeable = 1U;
     return ret;
@@ -1108,7 +1037,6 @@ csi_error_t csi_tdm_send_resume(csi_tdm_t *tdm)
 
 csi_error_t csi_tdm_send_start(csi_tdm_t *tdm)
 {
-#if 0
     CSI_PARAM_CHK(tdm, CSI_ERROR);
     csi_error_t ret = CSI_OK;
     csi_dma_ch_config_t config;
@@ -1145,19 +1073,10 @@ csi_error_t csi_tdm_send_start(csi_tdm_t *tdm)
     tdm->state.writeable = 1U;
 
     return ret;
-#else
-    csi_error_t ret = CSI_OK;
-    wj_tdm_regs_t *tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-    wj_tdm_txdma_enable(tdm_base);
-    csi_pin_set_mux(PORTA, PIN6,   PA6_I2S0_SCLK);
-    csi_pin_set_mux(PORTA, PIN7,  PA7_I2S0_WSCLK);
-    return ret;
-#endif
 }
 
 csi_error_t csi_tdm_receive_start(csi_tdm_t *tdm)
 {
-#if 0
     CSI_PARAM_CHK(tdm, CSI_ERROR);
     csi_error_t ret = CSI_OK;
     csi_dma_ch_config_t config;
@@ -1195,14 +1114,6 @@ csi_error_t csi_tdm_receive_start(csi_tdm_t *tdm)
     csi_dma_ch_start(tdm->rx_dma, (void *) & (tdm_base->TDM_RXFIFO_DATA), tdm->rx_buf->buffer + tdm->rx_buf->write, (tdm->rx_period));
     tdm->state.readable = 1U;
     return ret;
-#else
-    csi_error_t ret = CSI_OK;
-    wj_tdm_regs_t *tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-    wj_tdm_rxdma_enable(tdm_base);
-    csi_pin_set_mux(PORTA, PIN6,   PA6_I2S0_SCLK);
-    csi_pin_set_mux(PORTA, PIN7,  PA7_I2S0_WSCLK);
-    return ret;
-#endif
 }
 
 // csi_error_t csi_tdm_all_ch_receive_start(csi_tdm_t *tdm)
@@ -1305,15 +1216,12 @@ csi_error_t csi_tdm_receive_start(csi_tdm_t *tdm)
 void csi_tdm_send_stop(csi_tdm_t *tdm)
 {
     CSI_PARAM_CHK_NORETVAL(tdm);
-    wj_tdm_regs_t *tdm_base;
-    tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-    wj_tdm_txdma_disable(tdm_base);
-    csi_pin_set_mux(PORTA, PIN6,   PIN_FUNC_GPIO);
-    csi_pin_set_mux(PORTA, PIN7,  PIN_FUNC_GPIO);
-    // csi_ringbuffer_reset(tdm->tx_buf);
-    // memset(tdm->tx_buf->buffer, 0, tdm->tx_buf->size);
+    wj_tdm_regs_t *tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
+    csi_dma_ch_stop(tdm->tx_dma);
+    csi_ringbuffer_reset(tdm->tx_buf);
+    memset(tdm->tx_buf->buffer, 0, tdm->tx_buf->size);
 
-    // wj_tdm_flush_txfifo(tdm_base);
+    wj_tdm_flush_txfifo(tdm_base);
     tdm->state.writeable = 0U;
 }
 
@@ -1322,13 +1230,10 @@ void csi_tdm_receive_stop(csi_tdm_t *tdm)
     CSI_PARAM_CHK_NORETVAL(tdm);
     wj_tdm_regs_t *tdm_base;
     tdm_base = (wj_tdm_regs_t *)HANDLE_REG_BASE(tdm);
-    // csi_dma_ch_stop(tdm->rx_dma);
-    csi_pin_set_mux(PORTA, PIN6,   PIN_FUNC_GPIO);
-    csi_pin_set_mux(PORTA, PIN7,  PIN_FUNC_GPIO);
-    wj_tdm_rxdma_disable(tdm_base);
-    // csi_ringbuffer_reset(tdm->rx_buf);
-    // memset(tdm->rx_buf->buffer, 0, tdm->rx_buf->size);
-    // wj_tdm_flush_rxfifo(tdm_base);
+    csi_dma_ch_stop(tdm->rx_dma);
+    csi_ringbuffer_reset(tdm->rx_buf);
+    memset(tdm->rx_buf->buffer, 0, tdm->rx_buf->size);
+    wj_tdm_flush_rxfifo(tdm_base);
     tdm->state.readable = 0U;    
 }
 
@@ -1361,62 +1266,6 @@ void csi_tdm_detach_callback(csi_tdm_t *tdm)
     tdm->arg = NULL;
     tdm->send         = NULL;
     tdm->receive      = NULL;
-}
-
-csi_error_t csi_tdm_tx_link_dma(csi_tdm_t *tdm, csi_dma_ch_t *tx_dma)
-{
-    CSI_PARAM_CHK(tdm, CSI_ERROR);
-    csi_error_t ret = CSI_OK;
-
-    if (tx_dma != NULL) {
-        tx_dma->parent = tdm;
-        ret = csi_dma_ch_alloc(tx_dma, -1, -1);
-
-        if (ret == CSI_OK) {
-            csi_dma_ch_attach_callback(tx_dma, wj_tdm_dma_event_cb, NULL);
-            tdm->tx_dma = tx_dma;
-            tdm->send = wj_tdm_send_dma;
-        } else {
-            tx_dma->parent = NULL;
-        }
-    } else {
-        if (tdm->tx_dma) {
-            csi_dma_ch_detach_callback(tdm->tx_dma);
-            csi_dma_ch_free(tdm->tx_dma);
-            tdm->tx_dma = NULL;
-        }
-        tdm->send = NULL;
-    }
-
-    return ret;
-}
-
-csi_error_t csi_tdm_rx_link_dma(csi_tdm_t *tdm, csi_dma_ch_t *rx_dma)
-{
-    CSI_PARAM_CHK(ch, CSI_ERROR);
-    csi_error_t ret = CSI_OK;
-
-    if (rx_dma != NULL) {
-        rx_dma->parent = tdm;
-        ret = csi_dma_ch_alloc(rx_dma, -1, -1);
-
-        if (ret == CSI_OK) {
-            csi_dma_ch_attach_callback(rx_dma, wj_tdm_dma_event_cb, NULL);
-            tdm->rx_dma = rx_dma;
-            tdm->receive = wj_tdm_receive_dma;
-        } else {
-            rx_dma->parent = NULL;
-        }
-    } else {
-        if (tdm->rx_dma) {
-            csi_dma_ch_detach_callback(tdm->rx_dma);
-            csi_dma_ch_free(tdm->rx_dma);
-            tdm->rx_dma = NULL;
-        }
-        tdm->receive = NULL;
-    }
-
-    return ret;
 }
 
 // csi_error_t csi_tdm_ch_alloc(csi_tdm_t *tdm, csi_tdm_ch_t *ch, uint32_t ch_idx)

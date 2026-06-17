@@ -19,7 +19,6 @@ extern "C" {
 #endif
 
 typedef struct {
-    port_name_t port;
     pin_name_t pin;
     pin_func_t func;
 } console_port_t;

@@ -40,8 +40,8 @@ static csi_gpio_t gpio;
 
 void example_input_cfg_a(void)
 {
-    csi_pin_set_mux(EXAMPLE_ADC_INPUT_PORT, EXAMPLE_ADC_INPUT, EXAMPLE_ADC_INPUT_FUNC);
-    csi_pin_mode(EXAMPLE_ADC_INPUT_PORT, EXAMPLE_ADC_INPUT, GPIO_MODE_PULLDOWN);
+    csi_pin_set_mux(EXAMPLE_ADC_INPUT,  EXAMPLE_ADC_INPUT_FUNC);
+    csi_pin_mode(EXAMPLE_ADC_INPUT, GPIO_MODE_PULLDOWN);
     csi_gpio_init(&gpio, EXAMPLE_ADC_DMA_GPIO_IDX);
     csi_gpio_dir(&gpio, EXAMPLE_ADC_INPUT_MASK, GPIO_DIRECTION_OUTPUT);
     csi_gpio_write(&gpio, EXAMPLE_ADC_INPUT_MASK,  GPIO_PIN_LOW);
@@ -49,14 +49,14 @@ void example_input_cfg_a(void)
 
 void example_input_cfg_b(void)
 {
-    csi_pin_set_mux(EXAMPLE_ADC_INPUT_PORT, EXAMPLE_ADC_INPUT, EXAMPLE_ADC_INPUT_FUNC);
-    csi_pin_mode(EXAMPLE_ADC_INPUT_PORT, EXAMPLE_ADC_INPUT, GPIO_MODE_PULLUP);
+    csi_pin_set_mux(EXAMPLE_ADC_INPUT,  EXAMPLE_ADC_INPUT_FUNC);
+    csi_pin_mode(EXAMPLE_ADC_INPUT, GPIO_MODE_PULLUP);
     csi_gpio_write(&gpio, EXAMPLE_ADC_INPUT_MASK,  GPIO_PIN_HIGH);
 }
 
 void example_pin_adc_init(void)
 {
-    csi_pin_set_mux(EXAMPLE_ADC_CHANNEL0_PORT, EXAMPLE_ADC_CHANNEL0_PIN, EXAMPLE_ADC_CHANNEL0_PIN_FUNC);
+    csi_pin_set_mux(EXAMPLE_ADC_CHANNEL0_PIN,  EXAMPLE_ADC_CHANNEL0_PIN_FUNC);
 }
 
 static void adc_event_cb(csi_adc_t *adc, csi_adc_event_t event, void *arg)
@@ -191,13 +191,13 @@ int example_adc_intr(uint32_t val)
     int ret = 0;
 
     example_pin_adc_init();
-    ret = csi_adc_init(&adc, csi_pin_get_adc_index(EXAMPLE_ADC_CHANNEL0_PORT, EXAMPLE_ADC_CHANNEL0_PIN));
+    ret = csi_adc_init(&adc, csi_pin_get_adc_index(EXAMPLE_ADC_CHANNEL0_PIN));
 
     if (ret < 0) {
         return -1;
     }
 
-    ret = csi_adc_channel_enable(&adc, csi_pin_get_adc_channel(EXAMPLE_ADC_CHANNEL0_PORT, EXAMPLE_ADC_CHANNEL0_PIN), true);
+    ret = csi_adc_channel_enable(&adc, csi_pin_get_adc_channel(EXAMPLE_ADC_CHANNEL0_PIN), true);
 
     if (ret < 0) {
         return -1;

@@ -24,23 +24,22 @@
 /* example parameters */
 #define MAX_SUCCESS_NUM                    3
 #define EXAMPLE_FLASH_START_ADDRESS        0x50
-#define EXAMPLE_FLASH_WRITE_SIZE           0x240
+#define EXAMPLE_FLASH_WRITE_SIZE           0x250
 #define EXAMPLE_FLASH_SECTOR_ERASE_NUM     2
 
 static csi_gpio_t gpio;
 static csi_spi_t  spi;
 static flash_t    flash;
 static bindings_t binding;
-static uint8_t tx_data[EXAMPLE_FLASH_WRITE_SIZE] __attribute__((aligned(32)));;
-static uint8_t rx_data[EXAMPLE_FLASH_WRITE_SIZE] __attribute__((aligned(32)));;
+static uint8_t tx_data[EXAMPLE_FLASH_WRITE_SIZE];
+static uint8_t rx_data[EXAMPLE_FLASH_WRITE_SIZE];
 static volatile uint8_t suc_num = 0;
 
 static void example_pin_init(void)
 {
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_MISO_PORT,EXAMPLE_PIN_SPI_MISO, EXAMPLE_PIN_SPI_MISO_FUNC);
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_MOSI_PORT,EXAMPLE_PIN_SPI_MOSI, EXAMPLE_PIN_SPI_MOSI_FUNC);
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_SCK_PORT,EXAMPLE_PIN_SPI_SCK, EXAMPLE_PIN_SPI_SCK_FUNC);
-
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_MISO, EXAMPLE_PIN_SPI_MISO_FUNC);
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_MOSI, EXAMPLE_PIN_SPI_MOSI_FUNC);
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_SCK,  EXAMPLE_PIN_SPI_SCK_FUNC);
 }
 
 static void uninit()
@@ -51,10 +50,9 @@ static void uninit()
 
 static void soft_cs_pin_init(void)
 {
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_CS_PORT,EXAMPLE_PIN_SPI_CS,   EXAMPLE_PIN_SPI_SOFT_CS_FUNC);
-    csi_gpio_init(&gpio, EXAMPLE_PIN_SPI_CS_PORT);
-    csi_gpio_dir(&gpio, EXAMPLE_PIN_SPI_CS, GPIO_DIRECTION_OUTPUT);
-    csi_gpio_write(&gpio, EXAMPLE_PIN_SPI_CS, GPIO_PIN_HIGH);
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_CS,   EXAMPLE_PIN_SPI_SOFT_CS_FUNC);
+    csi_gpio_init(&gpio, EXAMPLE_PIN_SPI_CS_GPIO_IDX);
+    csi_gpio_dir(&gpio, EXAMPLE_PIN_SPI_CS_MSK, GPIO_DIRECTION_OUTPUT);
 }
 
 static int init(void)
@@ -100,7 +98,7 @@ static int init(void)
 
 static int ioctl(uint32_t value)
 {
-    csi_gpio_write(&gpio, EXAMPLE_PIN_SPI_CS, value);
+    csi_gpio_write(&gpio, EXAMPLE_PIN_SPI_CS_MSK, value);
     return 0;
 }
 
@@ -146,7 +144,7 @@ int example_flash_chip_erase(void)
     uint32_t i = 0;
     uint32_t j = 0;
     uint32_t addr;
-    uint8_t data[W25Q64FV_PAGE_SIZE] __attribute__((aligned(32)));;
+    uint8_t data[W25Q64FV_PAGE_SIZE];
 
     /* erase chip */
     ret = w25q64fv_erase_chip(&flash);

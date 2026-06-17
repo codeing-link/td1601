@@ -143,18 +143,18 @@ __Vectors:
     .byte 'e'
     .byte 'n'
     .short    0        /*chip id*/
-    .long    0x0
     .long    0x40
+    .long    0x0
     .long    (__image_size - 0x40)
 	.long    Reset_Handler
 	.short   0                  /*PID*/
 	.short   0                  /*VID*/
 	.short   0x1                /*Firmware Vesion*/
 	.string  "                "   /* 17byte string*/
-	.long    (__image_size - 0x40) /*image size*/
+	.long    __image_size         /*image size*/
+	.long    0                     /*header checksum*/
 	.long    0                     /*ramcode checksum*/
-	.long    0                     /*image checksum*/
-	.byte    0                     /*checksum flag*/
+	.byte    0                     /*image checksum*/
 	.byte    0                     /*reserved*/
 	.byte    0                     /*reserved*/
 	.byte    0                     /*header checksum*/

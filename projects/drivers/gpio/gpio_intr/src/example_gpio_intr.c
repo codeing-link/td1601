@@ -25,8 +25,8 @@ static void gpio_interrupt_handler(csi_gpio_t *gpio, uint32_t pin_mask, void *ar
 
 void gpio_falling_edge_interrupt(void)
 {
-    csi_pin_set_mux(EXAMPLE_INTR_GPIO_PIN_PORT, EXAMPLE_INTR_GPIO_PIN,  EXAMPLE_INTR_GPIO_PIN_FUNC);
-    csi_pin_set_mux(EXAMPLE_INTR_GPIO_PIN1_PORT, EXAMPLE_INTR_GPIO_PIN1, EXAMPLE_INTR_GPIO_PIN1_FUNC);
+    csi_pin_set_mux(EXAMPLE_INTR_GPIO_PIN,  EXAMPLE_INTR_GPIO_PIN_FUNC);
+    csi_pin_set_mux(EXAMPLE_INTR_GPIO_PIN1, EXAMPLE_INTR_GPIO_PIN1_FUNC);
     csi_gpio_init(&gpio, EXAMPLE_INTR_GPIO_IDX);
     csi_gpio_mode(&gpio, EXAMPLE_INTR_GPIO_PIN_MASK, GPIO_MODE_PULLUP);
     csi_gpio_attach_callback(&gpio, gpio_interrupt_handler, NULL);

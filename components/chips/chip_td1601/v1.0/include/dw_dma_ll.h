@@ -97,15 +97,8 @@ extern "C" {
 #define DW_DMA_CTL_TT_FC_M2P                                (0x1U << DW_DMA_CTL_TT_FC_Pos) //Memory to Peripheral
 #define DW_DMA_CTL_TT_FC_P2M                                (0x2U << DW_DMA_CTL_TT_FC_Pos) //Peripheral to Memory
 #define DW_DMA_CTL_TT_FC_P2P                                (0x3U << DW_DMA_CTL_TT_FC_Pos) //Peripheral to Peripheral
-#define DW_DMA_CTL_LLP_DST_EN_Pos                           (27U)
-#define DW_DMA_CTL_LLP_DST_EN_Msk                           (0x1U << DW_DMA_CTL_LLP_DST_EN_Pos)
-#define DW_DMA_CTL_LLP_DST_EN_En                            DW_DMA_CTL_LLP_DST_EN_Msk
-
-#define DW_DMA_CTL_LLP_SRC_EN_Pos                           (28U)
-#define DW_DMA_CTL_LLP_SRC_EN_Msk                           (0x1U << DW_DMA_CTL_LLP_SRC_EN_Pos)
-#define DW_DMA_CTL_LLP_SRC_EN_En                            DW_DMA_CTL_LLP_SRC_EN_Msk
 #define DW_DMA_CTL_BLOCE_TS_Pos                             (32U)
-#define DW_DMA_CTL_BLOCE_TS_Msk                             (0xFFFLLU << DW_DMA_CTL_BLOCE_TS_Pos)
+#define DW_DMA_CTL_BLOCE_TS_Msk                             (0x7FFLLU << DW_DMA_CTL_BLOCE_TS_Pos)
 #define DW_DMA_CTL_BLOCE_TS_En                              DW_DMA_CTL_BLOCE_TS_Msk
 
 /*!  SSTAT, offset: 0x020 */
@@ -586,95 +579,6 @@ extern "C" {
 #define DW_DMA_ChEnReg_CH_EN_WE_CH5                         (0x20U << DW_DMA_ChEnReg_CH_EN_WE_Pos)
 #define DW_DMA_ChEnReg_CH_EN_WE_CH6                         (0x40U << DW_DMA_ChEnReg_CH_EN_WE_Pos)
 #define DW_DMA_ChEnReg_CH_EN_WE_CH7                         (0x80U << DW_DMA_ChEnReg_CH_EN_WE_Pos)
-
-typedef struct __attribute__((aligned(4)))
-{
-    uint32_t    SAR;
-    uint32_t    DAR;
-    uint32_t    LLP;
-    uint32_t    CTLL;
-    uint32_t    CTLH;
-} dw_dma_ll_t;
-
-static inline void dw_dma_ll_set_sar(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->SAR  = value;
-}
-
-static inline void dw_dma_ll_set_dar(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->DAR  = value;
-}
-
-static inline void dw_dma_ll_en_int(dw_dma_ll_t *dma_ll)
-{
-    dma_ll->CTLL |= DW_DMA_CTL_INT_EN_En;
-}
-
-static inline void dw_dma_ll_dis_int(dw_dma_ll_t *dma_ll)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_INT_EN_En);
-}
-
-static inline void dw_dma_ll_set_dst_transfer_width(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_DST_TR_WIDTH_Msk);
-    dma_ll->CTLL |= DW_DMA_CTL_DST_TR_WIDTH_Msk & value;
-}
-
-static inline void dw_dma_ll_set_src_transfer_width(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_SRT_TR_WIDTH_Msk);
-    dma_ll->CTLL |= DW_DMA_CTL_SRT_TR_WIDTH_Msk & value;
-}
-
-static inline void dw_dma_ll_set_dinc(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_DINC_Msk);
-    dma_ll->CTLL |= (value << DW_DMA_CTL_DINC_Pos);
-}
-
-static inline void dw_dma_ll_set_sinc(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_SINC_Msk);
-    dma_ll->CTLL |= (value << DW_DMA_CTL_SINC_Pos);
-}
-
-static inline void dw_dma_ll_set_dest_burst_size(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_DEST_MSIZE_Msk);
-    dma_ll->CTLL |= DW_DMA_CTL_DEST_MSIZE_Msk & value;
-}
-
-static inline void dw_dma_ll_set_src_burst_size(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_SRC_MSIZE_Msk);
-    dma_ll->CTLL |= DW_DMA_CTL_SRC_MSIZE_Msk & value;
-}
-
-static inline void dw_dma_ll_set_transfer_type(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_TT_FC_Msk);
-    dma_ll->CTLL |= DW_DMA_CTL_TT_FC_Msk & value;
-}
-
-static inline void dw_dma_ll_set_dst_lli_en(dw_dma_ll_t*dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_LLP_DST_EN_Msk);
-    dma_ll->CTLL |= DW_DMA_CTL_LLP_DST_EN_Msk & value;
-}
-
-static inline void dw_dma_ll_set_src_lli_en(dw_dma_ll_t*dma_ll, uint32_t value)
-{
-    dma_ll->CTLL &= ~((uint32_t)DW_DMA_CTL_LLP_SRC_EN_Msk);
-    dma_ll->CTLL |= DW_DMA_CTL_LLP_SRC_EN_Msk & value;
-}
-
-static inline void dw_dma_ll_set_transfer_size(dw_dma_ll_t *dma_ll, uint32_t value)
-{
-    dma_ll->CTLH = value & 0xFFF;
-}
-
 typedef struct {
     __IOM uint64_t  SAR;        /* offset: 0x00+n*0x58 (R/W) Channel Source Address Register        */
     __IOM uint64_t  DAR;        /* offset: 0x08+n*0x58 (R/W) Channel Destination Address Register   */
@@ -751,10 +655,7 @@ static inline uint32_t dw_dma_get_llp_llp(dw_dma_ch_regs_t *dma)
 {
     return (dma->SAR & DW_DMA_DAR_Msk);
 }
-static inline void dw_dma_set_ch_llp(dw_dma_ch_regs_t *dma, uint32_t value)
-{
-    dma->LLP = value;
-}
+
 static inline void dw_dma_en_int(dw_dma_ch_regs_t *dma)
 {
     dma->CTL  |= DW_DMA_CTL_INT_EN_En;
@@ -841,17 +742,7 @@ static inline uint32_t dw_dma_get_transfer_type(dw_dma_ch_regs_t *dma)
 {
     return (dma->CTL & DW_DMA_CTL_TT_FC_Msk);
 }
-static inline void dw_dma_set_dst_lli_en(dw_dma_ch_regs_t*dma, uint32_t value)
-{
-    dma->CTL &= ~((uint64_t)DW_DMA_CTL_LLP_DST_EN_Msk);
-    dma->CTL |= DW_DMA_CTL_LLP_DST_EN_Msk & value;
-}
 
-static inline void dw_dma_set_src_lli_en(dw_dma_ch_regs_t*dma, uint32_t value)
-{
-    dma->CTL &= ~((uint64_t)DW_DMA_CTL_LLP_SRC_EN_Msk);
-    dma->CTL |= DW_DMA_CTL_LLP_SRC_EN_Msk & value;
-}
 static inline void dw_dma_set_transfer_size(dw_dma_ch_regs_t *dma, uint64_t value)
 {
     dma->CTL  &= ~((uint64_t)DW_DMA_CTL_BLOCE_TS_Msk);

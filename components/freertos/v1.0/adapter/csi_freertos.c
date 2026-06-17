@@ -410,7 +410,7 @@ k_status_t csi_kernel_delay_until(uint64_t ticks)
         return 0;
     }
 
-    vTaskDelayUntil((TickType_t *)&xLastWakeTime, ticks - xLastWakeTime);
+    vTaskDelayUntil(&xLastWakeTime, ticks - xLastWakeTime);
 #endif
     return 0;
 }

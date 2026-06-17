@@ -244,8 +244,6 @@ ATTRIBUTE_DATA csi_error_t csi_uart_baud(csi_uart_t *uart, uint32_t baud)
 #ifndef CONFIG_CHIP_TD1601
     pin_name_t rx_pin;
     pin_name_t tx_pin;
-    port_name_t rx_port;
-    port_name_t tx_port;
 #endif
     dw_uart_regs_t *uart_base;
     uint8_t temp[16];
@@ -255,16 +253,16 @@ ATTRIBUTE_DATA csi_error_t csi_uart_baud(csi_uart_t *uart, uint32_t baud)
 #if defined(CONFIG_CHIP_TD1601) || defined(CONFIG_CHIP_DANICA)
     mdelay(10);
 #else
-    tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin, &tx_port);
-    rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin, &rx_port);
+    tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin);
+    rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin);
 #endif
     flag =  csi_irq_save();
     ret = dw_uart_config_baudrate(uart_base, baud, soc_get_uart_freq((uint32_t)(uart->dev.idx)));
     csi_irq_restore(flag);
 #ifndef CONFIG_CHIP_TD1601
     dw_uart_clear_send_fifo(uart_base);
-    rx_pin_gpio_to_uart(uart->dev.idx, &rx_pin, &rx_port);
-    tx_pin_gpio_to_uart(uart->dev.idx, &tx_pin, &tx_port);
+    rx_pin_gpio_to_uart(uart->dev.idx, &rx_pin);
+    tx_pin_gpio_to_uart(uart->dev.idx, &tx_pin);
 #endif
     csi_uart_receive(uart, temp, sizeof(temp), 0U);
 
@@ -294,8 +292,8 @@ csi_error_t csi_uart_format(csi_uart_t *uart,  csi_uart_data_bits_t data_bits,
 #if defined(CONFIG_CHIP_TD1601) || defined(CONFIG_CHIP_DANICA)
     mdelay(10);
 #else
-    tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin, &tx_port);
-    rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin, &rx_port);
+    tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin);
+    rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin);
 #endif
     switch (data_bits) {
         case UART_DATA_BITS_5:
@@ -863,7 +861,7 @@ csi_error_t csi_uart_link_dma(csi_uart_t *uart, csi_dma_ch_t *tx_dma, csi_dma_ch
     return ret;
 }
 #ifndef CONFIG_CHIP_TD1601
-ATTRIBUTE_DATA static void rx_pin_uart_to_gpio(uint8_t dev_idx, pin_name_t *rx_pin, port_name_t *port_name)
+ATTRIBUTE_DATA static void rx_pin_uart_to_gpio(uint8_t dev_idx, pin_name_t *rx_pin)
 {
     CSI_ASSERT(rx_pin);
 
@@ -875,13 +873,12 @@ ATTRIBUTE_DATA static void rx_pin_uart_to_gpio(uint8_t dev_idx, pin_name_t *rx_p
             (uart_pinmap[cnt].channel == (uint8_t)PIN_UART_RX)) {
             csi_pin_set_mux(uart_pinmap[cnt].pin_name, PIN_FUNC_GPIO);
             *rx_pin = uart_pinmap[cnt].pin_name;
-            *port_name = uart_pinmap[cnt].port_name;
             break;
         }
     }
 }
 
-ATTRIBUTE_DATA static void tx_pin_uart_to_gpio(uint8_t dev_idx, pin_name_t *tx_pin, port_name_t *port_name)
+ATTRIBUTE_DATA static void tx_pin_uart_to_gpio(uint8_t dev_idx, pin_name_t *tx_pin)
 {
     CSI_ASSERT(tx_pin);
 
@@ -893,35 +890,32 @@ ATTRIBUTE_DATA static void tx_pin_uart_to_gpio(uint8_t dev_idx, pin_name_t *tx_p
             (uart_pinmap[cnt].channel == (uint8_t)PIN_UART_TX)) {
             csi_pin_set_mux(uart_pinmap[cnt].pin_name, PIN_FUNC_GPIO);
             *tx_pin = uart_pinmap[cnt].pin_name;
-            *port_name = uart_pinmap[cnt].port_name;
             break;
         }
     }
 }
 
-ATTRIBUTE_DATA static void rx_pin_gpio_to_uart(uint8_t dev_idx, pin_name_t *rx_pin, port_name_t *port_name)
+ATTRIBUTE_DATA static void rx_pin_gpio_to_uart(uint8_t dev_idx, pin_name_t *rx_pin)
 {
     int32_t cnt;
 
     for (cnt = 0; uart_pinmap[cnt].idx != 0xFFU; cnt++) {
         if ((*rx_pin == uart_pinmap[cnt].pin_name) && \
-            (*port_name == uart_pinmap[cnt].port_name) && \
             (dev_idx == uart_pinmap[cnt].idx)) {
-            csi_pin_set_mux(uart_pinmap[cnt].port_name, uart_pinmap[cnt].pin_name, uart_pinmap[cnt].pin_func);
+            csi_pin_set_mux(uart_pinmap[cnt].pin_name, uart_pinmap[cnt].pin_func);
             break;
         }
     }
 }
 
-ATTRIBUTE_DATA static void tx_pin_gpio_to_uart(uint8_t dev_idx, pin_name_t *tx_pin, port_name_t *port_name)
+ATTRIBUTE_DATA static void tx_pin_gpio_to_uart(uint8_t dev_idx, pin_name_t *tx_pin)
 {
     int32_t cnt;
 
     for (cnt = 0; uart_pinmap[cnt].idx != 0xFFU; cnt++) {
         if ((*tx_pin == uart_pinmap[cnt].pin_name) && \
-            (*port_name == uart_pinmap[cnt].port_name) && \
             (dev_idx == uart_pinmap[cnt].idx)) {
-            csi_pin_set_mux(uart_pinmap[cnt].port_name, uart_pinmap[cnt].pin_name, uart_pinmap[cnt].pin_func);
+            csi_pin_set_mux(uart_pinmap[cnt].pin_name, uart_pinmap[cnt].pin_func);
             break;
         }
     }
@@ -946,7 +940,6 @@ csi_error_t dw_uart_pm_action(csi_dev_t *dev, csi_pm_dev_action_t action)
             uart_base->LCR &= (~DW_UART_LCR_DLAB_EN);
             csi_pm_dev_save_regs(pm_dev->reten_mem + 2, (uint32_t *)(dev->reg_base + 4U), 1U);
             csi_pm_dev_save_regs(pm_dev->reten_mem + 2 + 1, (uint32_t *)(dev->reg_base + 12U), 2U);
-            csi_pm_dev_save_regs(pm_dev->reten_mem + 2 + 1 + 2, (uint32_t *)(dev->reg_base + 0xC0), 1U);
             break;
 
         case PM_DEV_RESUME:
@@ -958,7 +951,6 @@ csi_error_t dw_uart_pm_action(csi_dev_t *dev, csi_pm_dev_action_t action)
             uart_base->LCR &= (~DW_UART_LCR_DLAB_EN);
             csi_pm_dev_restore_regs(pm_dev->reten_mem + 2, (uint32_t *)(dev->reg_base + 4U), 1U);
             csi_pm_dev_restore_regs(pm_dev->reten_mem + 2 + 1, (uint32_t *)(dev->reg_base + 12U), 2U);
-            csi_pm_dev_restore_regs(pm_dev->reten_mem + 2 + 1 + 2, (uint32_t *)(dev->reg_base + 0xC0), 1U);
             break;
 
         default:

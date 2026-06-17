@@ -339,7 +339,7 @@ extern "C" {
 
 #define TXFIFO_IRQ_TH                              (0x4U)
 #define RXFIFO_IRQ_TH                              (0x2U)
-#define IIC_MAX_FIFO                               (0x7U)
+#define IIC_MAX_FIFO                               (0x1U)
 
 /* IIC default value definitions */
 #define DW_IIC_TIMEOUT_DEF_VAL  0x100000U

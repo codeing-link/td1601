@@ -27,7 +27,6 @@ static uint32_t inited_ctrl_num = 0U;
 
 uint32_t get_power(uint32_t base, uint32_t power);
 
-void wj_dma_irq_handler(void *arg) __attribute__((optimize("O0")));
 void wj_dma_irq_handler(void *arg)
 {
     csi_edma_t *dma = (csi_edma_t *)arg;
@@ -38,7 +37,7 @@ void wj_dma_irq_handler(void *arg)
 
    slist_for_each_entry(&dma->head, dma_ch, csi_edma_ch_t, next) {
         dma_ch_addr = &dma_addr->dma_array[dma_ch->ch_id];
-        int_status = dma_get_int_status(dma_ch_addr) & (dma_ch_addr->CH_INTM);
+        int_status = dma_get_int_status(dma_ch_addr);
 
         if (int_status != 0U) {
             if (dma_ch != NULL) {

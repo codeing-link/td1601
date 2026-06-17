@@ -365,6 +365,7 @@ Default_IRQHandler:
     .global trap
     .type   trap, %function
 trap:
+    /* j       . */
     /* Check for interrupt */
     addi    sp, sp, -4
     sw      t0, 0x0(sp)

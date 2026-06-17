@@ -113,7 +113,7 @@ ATTRIBUTE_DATA int32_t qspi_send_and_wait(csi_qspi_t *qspi, csi_qspi_command_t *
     return ret;
 }
 
-ATTRIBUTE_DATA static int32_t send(void *spiflash, uint8_t cmd, uint32_t addr, uint32_t addr_size, const void *data, uint32_t size)
+static int32_t send(void *spiflash, uint8_t cmd, uint32_t addr, uint32_t addr_size, const void *data, uint32_t size)
 {
     int32_t  ret = 0;
     uint32_t current_size, current_addr ;
@@ -202,7 +202,7 @@ ATTRIBUTE_DATA static int32_t send(void *spiflash, uint8_t cmd, uint32_t addr, u
     return ret;
 }
 
-ATTRIBUTE_DATA static int32_t receive(void *spiflash, uint8_t cmd, uint32_t addr, uint32_t addr_size, void *data, uint32_t size)
+static int32_t receive(void *spiflash, uint8_t cmd, uint32_t addr, uint32_t addr_size, void *data, uint32_t size)
 {
     int32_t  ret = 0;
     csi_spiflash_t *handle;

@@ -202,13 +202,6 @@ csi_error_t csi_dma_enable_pm(csi_dma_t *dma);
 */
 void        csi_dma_disable_pm(csi_dma_t *dma);
 
-  /**
-    \brief       Start DMA channel in link-list mode.
-    \param[in]   dma_ch  DMA channel handle to operate.
-    \param[in]   config  Pointer to DMA channel configuration structure.
-  */
-  void csi_dma_ch_start_linklist(csi_dma_ch_t *dma_ch, csi_dma_ch_config_t *config);
-
 #ifdef __cplusplus
 }
 #endif

@@ -27,31 +27,6 @@ void section_data_copy(void);
 void section_ram_code_copy(void);
 void section_bss_clear(void);
 
-#define __ASM_STR(x)    #x
-#define rv_csr_write(csr, val)                                \
-    ({                                                     \
-        unsigned long __v = (unsigned long)(val);          \
-        __asm__ __volatile__("csrw " __ASM_STR(csr) ", %0" \
-                             :                             \
-                             : "rK"(__v)                   \
-                             : "memory");                  \
-    })
-// I/D Cache will enable in cache_init
-
-#define CSR_MXSTATUS        0x7c0
-#define CSR_MHCR            0x7c1
-#define CSR_MHINT           0x7c5
-
-#ifdef CONFIG_BENCHMARK
-void cpu_features_init(void)
-{
-    rv_csr_write(CSR_MHCR, 0x17f & (~0x3));
-    rv_csr_write(CSR_MXSTATUS, 0x638000);
-    rv_csr_write(CSR_MHINT, 0x650c);
-    return;
-}
-#endif
-
 void enable_isaee(void)
 {
     uint32_t mxstatus = __get_MXSTATUS();
@@ -116,7 +91,8 @@ static void sys_spiflash_init(void)
 {
     csi_spiflash_qspi_init(&g_spiflash, 0U, NULL);
     csi_spiflash_config_data_line(&g_spiflash, SPIFLASH_DATA_4_LINES);
-    csi_spiflash_frequence(&g_spiflash, 33000000U);
+	csi_spiflash_frequence(&g_spiflash, 51000000U);
+	//csi_spiflash_frequence(&g_spiflash, 20000000U);
 }
 
 /**
@@ -128,9 +104,7 @@ static void sys_spiflash_init(void)
 void SystemInit(void)
 {
     enable_isaee();
-#ifdef CONFIG_BENCHMARK 
-    cpu_features_init();
-#endif
+
     cache_init();
 
     section_init();

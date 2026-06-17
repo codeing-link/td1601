@@ -44,18 +44,16 @@ static void spi_event_cb(csi_spi_t *spi, csi_spi_event_t event, void *arg)
 
 static void example_pin_init(void)
 {
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_MISO_PORT,EXAMPLE_PIN_SPI_MISO, EXAMPLE_PIN_SPI_MISO_FUNC);
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_MOSI_PORT,EXAMPLE_PIN_SPI_MOSI, EXAMPLE_PIN_SPI_MOSI_FUNC);
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_SCK_PORT,EXAMPLE_PIN_SPI_SCK, EXAMPLE_PIN_SPI_SCK_FUNC);
-
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_MISO, EXAMPLE_PIN_SPI_MISO_FUNC);
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_MOSI, EXAMPLE_PIN_SPI_MOSI_FUNC);
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_SCK,  EXAMPLE_PIN_SPI_SCK_FUNC);
 }
 
 static void soft_cs_pin_init(void)
 {
-    csi_pin_set_mux(EXAMPLE_PIN_SPI_CS_PORT,EXAMPLE_PIN_SPI_CS,   EXAMPLE_PIN_SPI_SOFT_CS_FUNC);
-    csi_gpio_init(&gpio, EXAMPLE_PIN_SPI_CS_PORT);
-    csi_gpio_dir(&gpio, EXAMPLE_PIN_SPI_CS, GPIO_DIRECTION_OUTPUT);
-    csi_gpio_write(&gpio, EXAMPLE_PIN_SPI_CS, GPIO_PIN_HIGH);
+    csi_pin_set_mux(EXAMPLE_PIN_SPI_CS,   EXAMPLE_PIN_SPI_SOFT_CS_FUNC);
+    csi_gpio_init(&gpio, EXAMPLE_PIN_SPI_CS_GPIO_IDX);
+    csi_gpio_dir(&gpio, EXAMPLE_PIN_SPI_CS_MSK, GPIO_DIRECTION_OUTPUT);
 }
 
 static int init(void)
@@ -113,7 +111,7 @@ static void uninit()
 
 static int ioctl(uint32_t value)
 {
-    csi_gpio_write(&gpio, EXAMPLE_PIN_SPI_CS, value);
+    csi_gpio_write(&gpio, EXAMPLE_PIN_SPI_CS_MSK, value);
     return 0;
 }
 

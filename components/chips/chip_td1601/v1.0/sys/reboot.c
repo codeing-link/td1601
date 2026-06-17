@@ -10,7 +10,7 @@
 #include <soc.h>
 #include <drv/wdt.h>
 
-void drv_reboot(uint32_t timeout)
+void drv_reboot(void)
 {
     csi_wdt_t wdt_handle;
     uint32_t irq_flag = 0U;
@@ -18,7 +18,7 @@ void drv_reboot(uint32_t timeout)
     irq_flag = csi_irq_save();
 
     csi_wdt_init(&wdt_handle, 0U);
-    csi_wdt_set_timeout(&wdt_handle, timeout);
+    csi_wdt_set_timeout(&wdt_handle, 0U);
     csi_wdt_start(&wdt_handle);
 
     /* waiting for reboot */

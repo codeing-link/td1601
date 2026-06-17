@@ -72,7 +72,7 @@ int32_t test_pmu_sleep_1_mode(void)
 #if CONFIG_TEST_WAKEUP_TIME
     config_timer_wakeup_source(TIME_DELAY);
 #else
-    printf("please change the wakeup pin %s to gnd\n", EXAMPLE_BOARD_WAKEUP_PIN_NAME);
+    printf("please change the wakeup pin %s to h\n", EXAMPLE_BOARD_WAKEUP_PIN_NAME);
     ret = csi_pm_config_wakeup_source(EXAMPLE_WAKEUP_NUM, true);
 
     if (ret < 0) {
@@ -113,8 +113,8 @@ int32_t test_pmu_sleep_1_mode(void)
 
 static void gpio_config(void)
 {
-    csi_pin_set_mux(WAKEUP_PIN_PORT, WAKEUP_PIN, WAKEUP_PIN_FUNC);
-    csi_pin_wakeup(WAKEUP_PIN_PORT, WAKEUP_PIN, 1);
+    csi_pin_set_mux(WAKEUP_PIN, WAKEUP_PIN_FUNC);
+    csi_pin_wakeup(WAKEUP_PIN, 1);
 #ifdef CONFIG_CHIP_PANGU
     gpio_pin_handle_t pin = NULL;
     pin = csi_gpio_pin_initialize(WAKEUP_PIN, NULL);

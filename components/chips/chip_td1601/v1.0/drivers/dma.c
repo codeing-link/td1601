@@ -16,7 +16,7 @@
 #include <drv/irq.h>
 #include <csi_core.h>
 #include "dw_dma_ll.h"
-#define  DMA_LL_SIZE    sizeof(dw_dma_ll_t)
+
 #define  REGS_OFFSET  0x58
 extern uint8_t g_dma_chnum[];
 static csi_dma_t *dma_array[2];
@@ -313,32 +313,8 @@ csi_error_t csi_dma_ch_config(csi_dma_ch_t *dma_ch, csi_dma_ch_config_t *config)
     dw_dma_set_sinc(dma_ch_addr, config->src_inc);
     dw_dma_set_dinc(dma_ch_addr, config->dst_inc);
     // config->group_len
-    switch (config->group_len) {
-        case 1:
-            dw_dma_set_dest_burst_size(dma_ch_addr, DW_DMA_CTL_DEST_MSIZE_1);
-            dw_dma_set_src_burst_size(dma_ch_addr, DW_DMA_CTL_SRC_MSIZE_1);
-            break;
-        case 4:
-            dw_dma_set_dest_burst_size(dma_ch_addr, DW_DMA_CTL_DEST_MSIZE_4);
-            dw_dma_set_src_burst_size(dma_ch_addr, DW_DMA_CTL_SRC_MSIZE_4);
-            break;
-        case 8:
-            dw_dma_set_dest_burst_size(dma_ch_addr, DW_DMA_CTL_DEST_MSIZE_8);
-            dw_dma_set_src_burst_size(dma_ch_addr, DW_DMA_CTL_SRC_MSIZE_8);
-            break;
-        case 16:
-            dw_dma_set_dest_burst_size(dma_ch_addr, DW_DMA_CTL_DEST_MSIZE_16);
-            dw_dma_set_src_burst_size(dma_ch_addr, DW_DMA_CTL_SRC_MSIZE_16);
-            break;
-        case 32:
-            dw_dma_set_dest_burst_size(dma_ch_addr, DW_DMA_CTL_DEST_MSIZE_32);
-            dw_dma_set_src_burst_size(dma_ch_addr, DW_DMA_CTL_SRC_MSIZE_32);
-            break;
-        default:
-            break;
-    }
-    // dw_dma_set_dest_burst_size(dma_ch_addr, DW_DMA_CTL_DEST_MSIZE_1);
-    // dw_dma_set_src_burst_size(dma_ch_addr, DW_DMA_CTL_SRC_MSIZE_1);
+    dw_dma_set_dest_burst_size(dma_ch_addr, DW_DMA_CTL_DEST_MSIZE_1);
+    dw_dma_set_src_burst_size(dma_ch_addr, DW_DMA_CTL_SRC_MSIZE_1);
     /* set little endian */
     //not support
     // dw_dma_set_addr_endian(dma_ch_addr, 0U, 0U);
@@ -490,167 +466,5 @@ void csi_dma_ch_stop(csi_dma_ch_t *dma_ch)
     CSI_PARAM_CHK_NORETVAL(dma_ch);
     dma_addr = (dw_dma_regs_t *)(dma_array[dma_ch->ctrl_id]->dev.reg_base);
     dw_dma_reset_channel_en(dma_addr, DW_DMA_ChEnReg_CH_EN_En_CH0 << dma_ch->ch_id);
-
-}
-csi_error_t csi_dma_add_link_list_item(csi_dma_ch_t *dma_ch,
-    csi_dma_ch_config_t *config,
-    csi_dma_link_list_item_t *item,
-    uint8_t is_last_item)
-{
-    CSI_PARAM_CHK(dma_ch, CSI_ERROR);
-    CSI_PARAM_CHK(config, CSI_ERROR);
-    CSI_PARAM_CHK(item, CSI_ERROR);
-
-    if (0 == config->link_list_en)
-    {
-        return CSI_ERROR;
-    }
-
-    if(NULL == config->link_list_config.lli_buf)
-    {
-        return CSI_ERROR;
-    }
-
-    uint32_t idx = config->link_list_config.link_list_num;
-    uint8_t *buf = (uint8_t *)config->link_list_config.lli_buf;
-    dw_dma_ll_t *lli = (dw_dma_ll_t *)(buf + idx * DMA_LL_SIZE);
-
-    uint32_t *p = (uint32_t *)lli;
-    for (int i = 0; i < DMA_LL_SIZE / 4; i++)
-    {
-        p[i] = 0;
-    }
-
-    switch(config->src_tw)
-    {
-        case DMA_DATA_WIDTH_8_BITS:
-            dw_dma_ll_set_src_transfer_width(lli, DW_DMA_CTL_SRT_TR_WIDTH_8);
-            dw_dma_ll_set_transfer_size(lli, item->length);
-            break;
-        case DMA_DATA_WIDTH_16_BITS:
-            dw_dma_ll_set_src_transfer_width(lli, DW_DMA_CTL_SRT_TR_WIDTH_16);
-            dw_dma_ll_set_transfer_size(lli, (item->length)/2);
-            break;
-        case DMA_DATA_WIDTH_32_BITS:
-            dw_dma_ll_set_src_transfer_width(lli, DW_DMA_CTL_SRT_TR_WIDTH_32);
-            dw_dma_ll_set_transfer_size(lli, (item->length)/4);
-            break;
-        default: break;
-    }
-
-    switch (config->dst_tw)
-    {
-        case DMA_DATA_WIDTH_8_BITS:
-            dw_dma_ll_set_dst_transfer_width(lli, DW_DMA_CTL_DST_TR_WIDTH_8);
-            break;
-        case DMA_DATA_WIDTH_16_BITS:
-            dw_dma_ll_set_dst_transfer_width(lli, DW_DMA_CTL_DST_TR_WIDTH_16);
-            break;
-        case DMA_DATA_WIDTH_32_BITS:
-            dw_dma_ll_set_dst_transfer_width(lli, DW_DMA_CTL_DST_TR_WIDTH_32);
-            break;
-        default: break;
-    }
-
-    dw_dma_ll_set_sinc(lli, config->src_inc);
-    dw_dma_ll_set_dinc(lli, config->dst_inc);
-
-    switch (config->group_len)
-    {
-        case 1:
-            dw_dma_ll_set_dest_burst_size(lli, DW_DMA_CTL_DEST_MSIZE_1);
-            dw_dma_ll_set_src_burst_size(lli, DW_DMA_CTL_SRC_MSIZE_1);
-            break;
-        case 4:
-            dw_dma_ll_set_dest_burst_size(lli, DW_DMA_CTL_DEST_MSIZE_4);
-            dw_dma_ll_set_src_burst_size(lli, DW_DMA_CTL_SRC_MSIZE_4);
-            break;
-        case 8:
-            dw_dma_ll_set_dest_burst_size(lli, DW_DMA_CTL_DEST_MSIZE_8);
-            dw_dma_ll_set_src_burst_size(lli, DW_DMA_CTL_SRC_MSIZE_8);
-            break;
-        case 16:
-            dw_dma_ll_set_dest_burst_size(lli, DW_DMA_CTL_DEST_MSIZE_16);
-            dw_dma_ll_set_src_burst_size(lli, DW_DMA_CTL_SRC_MSIZE_16);
-            break;
-        case 32:
-            dw_dma_ll_set_dest_burst_size(lli, DW_DMA_CTL_DEST_MSIZE_32);
-            dw_dma_ll_set_src_burst_size(lli, DW_DMA_CTL_SRC_MSIZE_32);
-            break;
-        default:
-            break;
-    }
-
-    switch (config->trans_dir)
-    {
-        case DMA_MEM2MEM:
-            dw_dma_ll_set_transfer_type(lli, DW_DMA_CTL_TT_FC_M2M);
-            break;
-        case DMA_MEM2PERH:
-            dw_dma_ll_set_transfer_type(lli, DW_DMA_CTL_TT_FC_M2P);
-            break;
-        case DMA_PERH2MEM:
-            dw_dma_ll_set_transfer_type(lli, DW_DMA_CTL_TT_FC_P2M);
-            break;
-        default: break;
-    }
-
-    dw_dma_ll_set_sar(lli, (uint32_t)item->srcaddr);
-    dw_dma_ll_set_dar(lli, (uint32_t)item->dstaddr);
-    dw_dma_ll_set_dst_lli_en(lli,DW_DMA_CTL_LLP_DST_EN_En);
-    dw_dma_ll_set_src_lli_en(lli,DW_DMA_CTL_LLP_SRC_EN_En);
-    if(!is_last_item)
-    {
-        lli->LLP =(uint32_t)(lli + 1);
-    }
-    else
-    {
-        dw_dma_ll_en_int(lli);
-        lli->LLP = 0u;
-    }
-
-    csi_dcache_clean_invalid_range((uint32_t *)lli, DMA_LL_SIZE);
-
-    config->link_list_config.link_list_num++;
-
-    return CSI_OK;
-}
-
-void csi_dma_ch_start_linklist(csi_dma_ch_t *dma_ch, csi_dma_ch_config_t *config)
-{
-    CSI_PARAM_CHK_NORETVAL(dma_ch);
-    CSI_PARAM_CHK_NORETVAL(config);
-
-    dw_dma_ch_regs_t *dma_ch_addr = (dw_dma_ch_regs_t *)((dma_ch->ch_id * REGS_OFFSET) +
-    dma_array[dma_ch->ctrl_id]->dev.reg_base);
-    dw_dma_regs_t *dma_addr = (dw_dma_regs_t *)(dma_array[dma_ch->ctrl_id]->dev.reg_base);
-
-    dma_ch_addr->LLP = (uint32_t)config->link_list_config.lli_buf;
-
-    switch (config->trans_dir)
-    {
-        case DMA_MEM2MEM:
-            dw_dma_dst_hs_sft(dma_ch_addr);
-            dw_dma_src_hs_sft(dma_ch_addr);
-            break;
-
-        case DMA_MEM2PERH:
-            dw_dma_dst_hs_hw(dma_ch_addr);
-            dw_dma_src_hs_sft(dma_ch_addr);
-            dw_dma_set_dest_per(dma_ch_addr, config->handshake);
-            break;
-
-        case DMA_PERH2MEM:
-            dw_dma_src_hs_hw(dma_ch_addr);
-            dw_dma_dst_hs_sft(dma_ch_addr);
-            dw_dma_set_src_per(dma_ch_addr,  config->handshake);
-            break;
-
-        default:
-            break;
-    }
-    dw_dma_set_dst_lli_en(dma_ch_addr,DW_DMA_CTL_LLP_DST_EN_En);
-    dw_dma_set_src_lli_en(dma_ch_addr,DW_DMA_CTL_LLP_SRC_EN_En);
-    dw_dma_set_channel_en(dma_addr, (DW_DMA_ChEnReg_CH_EN_En_CH0 << dma_ch->ch_id));// only channel 0 ,1
 
 }

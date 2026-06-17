@@ -12,7 +12,7 @@ MEMORY
     SPIFLASH : ORIGIN = 0x18000000 , LENGTH = 0x800000   /* SPI-FLASH 64MB*/
 }
 
-__min_heap_size = 0x200;
+__min_heap_size = 0x1000;
 PROVIDE (__ram_end  = 0x20020000);
 PROVIDE (__heap_end = __ram_end);
 PROVIDE (__image_size = (__rodata_end__ - __stext) + (__bss_start__ - __data_start__));
@@ -55,8 +55,6 @@ SECTIONS
  } > REGION_TEXT
  .gcc_except_table : ONLY_IF_RO {
   *(.gcc_except_table .gcc_except_table.*)
-  . = ALIGN(4) ;
-  __etext = . ;
  } > REGION_TEXT
  .rodata : {
   . = ALIGN(0x4) ;

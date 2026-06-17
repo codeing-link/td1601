@@ -40,7 +40,7 @@ struct csi_gpio_pin {
   \param[in]   pin_name    GPIO pin name
   \return      Error code
 */
-csi_error_t csi_gpio_pin_init(csi_gpio_pin_t *pin, port_name_t port_name, pin_name_t pin_name);
+csi_error_t csi_gpio_pin_init(csi_gpio_pin_t *pin, pin_name_t pin_name);
 
 /**
   \brief       De-initialize GPIO pin

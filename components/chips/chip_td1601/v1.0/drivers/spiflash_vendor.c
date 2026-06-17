@@ -10,22 +10,6 @@
 #include "spiflash_vendor.h"
 
 const struct csi_spiflash_param g_spiflash_vendor_list[] = {
-#ifdef ZB25VQ128D
-	    {
-        .flash_name  = ( char * )"zb25vq128d",
-        .flash_id    = 0x005e4018U,
-        .addr_mode   = FLASH_ADDR_24,
-        .flash_size  = ( uint32_t )( 16 * 1024 * 1024 ),
-        .sector_size = ( uint32_t )( 4 * 1024 ),
-        .page_size   = 256U,
-        .has_lock    = 1U,
-        .region      = (uint32_t)LOCK_TP_DUAL,
-        .bp_bits     = 3U,
-        .base_protect_size = ( uint32_t )( 256 * 1024 ),
-        .qe_pos      = 1U,
-        .sr_count    = 3U
-    },
-#endif
 #ifdef P25Q40UDWF
     {
         .flash_name  = ( char * )"p25q40udwf",

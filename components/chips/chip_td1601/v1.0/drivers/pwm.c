@@ -204,16 +204,7 @@ csi_error_t csi_pwm_out_start(csi_pwm_t *pwm, uint32_t channel)
 {
     CSI_PARAM_CHK(pwm, CSI_ERROR);
     wj_pwm_regs_t *pwm_base = (wj_pwm_regs_t *)HANDLE_REG_BASE(pwm);
-    switch (channel) 
-    {
-        case 0: wj_pwm_invtr_trigger_0_up_en(pwm_base); break;
-        case 1: wj_pwm_invtr_trigger_1_up_en(pwm_base); break;
-        case 2: wj_pwm_invtr_trigger_2_up_en(pwm_base); break;
-        case 3: wj_pwm_invtr_trigger_3_up_en(pwm_base); break;
-        case 4: wj_pwm_invtr_trigger_4_up_en(pwm_base); break;
-        case 5: wj_pwm_invtr_trigger_5_up_en(pwm_base); break;
-        default: break;
-    }
+
     wj_pwm_config_output_en(pwm_base, channel);
 
     return CSI_OK;
@@ -296,7 +287,7 @@ csi_error_t csi_pwm_capture_start(csi_pwm_t *pwm, uint32_t channel)
     CSI_PARAM_CHK(pwm, CSI_ERROR);
     wj_pwm_regs_t *pwm_base = (wj_pwm_regs_t *)HANDLE_REG_BASE(pwm);
 
-    wj_pwm_config_output_dis(pwm_base, channel);             ///< Turn off the normal PWM output
+    wj_pwm_config_output_ch_dis(pwm_base, channel);             ///< Turn off the normal PWM output
 
     wj_pwm_config_input_capture_ch_en(pwm_base, channel);       ///< Turn on the capture PWM input
 

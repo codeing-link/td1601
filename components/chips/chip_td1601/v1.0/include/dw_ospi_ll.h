@@ -189,22 +189,17 @@ extern "C" {
 #define DW_OSPI_SPIMSSEL_SLAVE                      (0x0U << DW_OSPI_SPIMSSEL_Pos)
 
 /* SPI_CTRL0, offset: 0xF4 */
-/* TRANS_TYPE */
-#define DW_OSPI_SPI_ADDR_INSTR_FORMAT_Pos           (0U)
-#define DW_OSPI_SPI_ADDR_INSTR_FORMAT_Msk           (0x3U << DW_OSPI_SPI_ADDR_INSTR_FORMAT_Pos)
-#define DW_OSPI_SPI_ADDR_INSTR_STD_SPI              (0x0U << DW_OSPI_SPI_ADDR_INSTR_FORMAT_Pos)  // 00: 指令+地址 标准SPI
-#define DW_OSPI_SPI_ADDR_INSTR_STD_INST_SPI         (0x1U << DW_OSPI_SPI_ADDR_INSTR_FORMAT_Pos)  // 01: 指令标准SPI，地址用SPI_FRF
-#define DW_OSPI_SPI_ADDR_INSTR_BOTH_SPI_FRF         (0x2U << DW_OSPI_SPI_ADDR_INSTR_FORMAT_Pos)  // 10: 指令+地址 都用SPI_FRF
+#define DW_OSPI_SPI_CTRL0_TRANS_TYPE_Pos                  (0U)
+#define DW_OSPI_SPI_CTRL0_TRANS_TYPE_Msk                  (0x3U << DW_OSPI_SPI_CTRL0_TRANS_TYPE_Pos)
 
-/* ADDR_L */
-#define DW_OSPI_SPI_CTRL0_ADDR_L_Pos                (2U)
-#define DW_OSPI_SPI_CTRL0_ADDR_L_Msk                (0xFU << DW_OSPI_SPI_CTRL0_ADDR_L_Pos)
+#define DW_OSPI_SPI_CTRL0_ADDR_L_Pos                      (2U)
+#define DW_OSPI_SPI_CTRL0_ADDR_L_Msk                      (0xFU << DW_OSPI_SPI_CTRL0_ADDR_L_Pos)
 
-#define DW_OSPI_SPI_CTRL0_INST_L_Pos                (8U)
-#define DW_OSPI_SPI_CTRL0_INST_L_Msk                (0x3U << DW_OSPI_SPI_CTRL0_INST_L_Pos)
+#define DW_OSPI_SPI_CTRL0_INST_L_Pos                      (8U)
+#define DW_OSPI_SPI_CTRL0_INST_L_Msk                      (0x3U << DW_OSPI_SPI_CTRL0_INST_L_Pos)
 
-#define DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Pos           (11U)
-#define DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Msk           (0x1FU << DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Pos)
+#define DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Pos                 (11U)
+#define DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Msk                 (0x1FU << DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Pos)
 
 typedef struct {
     __IOM uint32_t CTRLR0;      /* Offset: 0x000 (R/W)  Control register 0 */
@@ -237,40 +232,21 @@ typedef struct {
     __IOM uint32_t SPI_CTRL0; /* Offset: 0x0F4 (R/W)  Rx Sample Delay Register */
 } dw_ospi_regs_t;
 
-static inline void dw_ospi_spi_ctrl0_set_trans_type_std_inst_addr(dw_ospi_regs_t *ospi_base)
+static inline void dw_ospi_spi_ctrl0_set_trans_type_inst_addr(dw_ospi_regs_t *ospi_base)
 {
-    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_ADDR_INSTR_FORMAT_Msk;
-    ospi_base->SPI_CTRL0 |= DW_OSPI_SPI_ADDR_INSTR_STD_SPI;
+    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_CTRL0_TRANS_TYPE_Msk;
 }
 
-static inline void dw_ospi_spi_ctrl0_set_trans_type_inst_std_addr_frf(dw_ospi_regs_t *ospi_base)
+static inline void dw_ospi_spi_ctrl0_set_trans_type_inst(dw_ospi_regs_t *ospi_base)
 {
-    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_ADDR_INSTR_FORMAT_Msk;
-    ospi_base->SPI_CTRL0 |= DW_OSPI_SPI_ADDR_INSTR_STD_INST_SPI;
+    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_CTRL0_TRANS_TYPE_Msk;
+    ospi_base->SPI_CTRL0 |= (1 << DW_OSPI_SPI_CTRL0_TRANS_TYPE_Pos);
 }
 
-static inline void dw_ospi_spi_ctrl0_set_trans_type_frf_inst_addr(dw_ospi_regs_t *ospi_base)
+static inline void dw_ospi_spi_ctrl0_set_trans_type_spifrf(dw_ospi_regs_t *ospi_base)
 {
-    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_ADDR_INSTR_FORMAT_Msk;
-    ospi_base->SPI_CTRL0 |= DW_OSPI_SPI_ADDR_INSTR_BOTH_SPI_FRF;
-}
-
-static inline void dw_ospi_spi_ctrl0_set_addr_l(dw_ospi_regs_t *ospi_base, uint32_t length)
-{
-    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_CTRL0_ADDR_L_Msk;
-    ospi_base->SPI_CTRL0 |= (length << DW_OSPI_SPI_CTRL0_ADDR_L_Pos);
-}
-
-static inline void dw_ospi_spi_ctrl0_set_inst_l(dw_ospi_regs_t *ospi_base, uint32_t length)
-{
-    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_CTRL0_INST_L_Msk;
-    ospi_base->SPI_CTRL0 |= (length << DW_OSPI_SPI_CTRL0_INST_L_Pos);
-}
-
-static inline void dw_ospi_spi_ctrl0_set_wait_cycles(dw_ospi_regs_t *ospi_base, uint32_t length)
-{
-    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Msk;
-    ospi_base->SPI_CTRL0 |= (length << DW_OSPI_SPI_CTRL0_WAIT_CYCLES_Pos);
+    ospi_base->SPI_CTRL0 &= ~DW_OSPI_SPI_CTRL0_TRANS_TYPE_Msk;
+    ospi_base->SPI_CTRL0 |= (2 << DW_OSPI_SPI_CTRL0_TRANS_TYPE_Pos);
 }
 
 static inline void dw_ospi_enable_slave_select_toggle(dw_ospi_regs_t *ospi_base)
@@ -283,13 +259,10 @@ static inline void dw_ospi_disable_slave_select_toggle(dw_ospi_regs_t *ospi_base
     ospi_base->CTRLR0 &= ~DW_OSPI_CTRLR0_SSTE_EN;
 }
 
-static inline void dw_ospi_config_ctl_frame_len(dw_ospi_regs_t *ospi_base, uint32_t length)
+static inline void dw_ospi_config_ctl_frame_len(dw_ospi_regs_t *ospi_base, uint32_t len)
 {
-    uint32_t temp;
-    temp = ospi_base->CTRLR0;
-    temp &= ~DW_OSPI_CTRLR0_DFS_Msk;
-    temp |= (length << DW_OSPI_CTRLR0_DFS_Pos);
-    ospi_base->CTRLR0 = temp;
+    ospi_base->CTRLR0 &= ~DW_OSPI_CTRLR0_CFS_Msk;
+    ospi_base->CTRLR0 |= (len << DW_OSPI_CTRLR0_CFS_Pos);
 }
 
 static inline void dw_ospi_enable_test_mode(dw_ospi_regs_t *ospi_base)
@@ -320,15 +293,15 @@ static inline void dw_ospi_set_rx_mode(dw_ospi_regs_t *ospi_base)
     ospi_base->CTRLR0 |= DW_OSPI_CTRLR0_TMOD_RX;
 }
 
+static inline uint32_t dw_ospi_get_transfer_mode(dw_ospi_regs_t *ospi_base)
+{
+    return ospi_base->CTRLR0 & DW_OSPI_CTRLR0_TMOD_Msk;
+}
+
 static inline void dw_ospi_set_eeprom_mode(dw_ospi_regs_t *ospi_base)
 {
     ospi_base->CTRLR0 &= ~DW_OSPI_CTRLR0_TMOD_Msk;
     ospi_base->CTRLR0 |= DW_OSPI_CTRLR0_TMOD_EEPROM;
-}
-
-static inline uint32_t dw_ospi_get_transfer_mode(dw_ospi_regs_t *ospi_base)
-{
-    return ospi_base->CTRLR0 & DW_OSPI_CTRLR0_TMOD_Msk;
 }
 
 static inline void dw_ospi_set_cpol0(dw_ospi_regs_t *ospi_base)
@@ -460,9 +433,14 @@ static inline void dw_ospi_disable_mw_handshaking(dw_ospi_regs_t *ospi_base)
     ospi_base->MWCR &= DW_OSPI_MWCR_MHS_EN;
 }
 
-static inline void dw_ospi_enable_slave(dw_ospi_regs_t *ospi_base)
+static inline void dw_ospi_enable_slave(dw_ospi_regs_t *ospi_base, uint32_t idx)
 {
-    ospi_base->SER |= 1U;
+    ospi_base->SER |= ((uint32_t)1U << idx);
+}
+
+static inline void dw_ospi_disable_slave(dw_ospi_regs_t *ospi_base, uint32_t idx)
+{
+    ospi_base->SER &= ((uint32_t) 1U << idx);
 }
 
 static inline void dw_ospi_disable_all_slave(dw_ospi_regs_t *ospi_base)

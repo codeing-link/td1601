@@ -23,7 +23,7 @@ void example_main(void)
 {
     board_init();
 
-    printf("Hello World!\n");
+    printf("Hello World! %d\n");
     CSI_EXAMPLE_RESULT(0);
 	csi_kernel_task_del(csi_kernel_task_get_cur());
 

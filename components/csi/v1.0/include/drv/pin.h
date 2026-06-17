@@ -61,16 +61,15 @@ typedef enum{
 }csi_pin_i2s_t;
 
 typedef struct {
-    port_name_t port_name;
     pin_name_t  pin_name;
     uint8_t     idx;        ///< ctrl idx.    e.g: ADC0 channel 1, idx = 0, channel = 1
     uint8_t     channel;    ///< channel idx. e.g: same as the previous line
     pin_func_t  pin_func;
 } csi_pinmap_t;
 
-extern uint32_t target_pin_to_devidx(port_name_t port_name, pin_name_t pin_name, const csi_pinmap_t *pinmap);
-extern uint32_t target_pin_to_channel(port_name_t port_name, pin_name_t pin_name,const csi_pinmap_t *pinmap);
-extern uint32_t target_pin_to_index(port_name_t port_name, pin_name_t pin_name,const csi_pinmap_t *pinmap);
+extern uint32_t target_pin_to_devidx(pin_name_t pin_name, const csi_pinmap_t *pinmap);
+extern uint32_t target_pin_to_channel(pin_name_t pin_name,const csi_pinmap_t *pinmap);
+extern uint32_t target_pin_to_index(pin_name_t pin_name,const csi_pinmap_t *pinmap);
 extern pin_name_t target_gpio_to_pin(uint8_t gpio_idx, uint8_t channel,const csi_pinmap_t *pinmap);
 
 /**
@@ -79,14 +78,14 @@ extern pin_name_t target_gpio_to_pin(uint8_t gpio_idx, uint8_t channel,const csi
   \param[in]   pin_func    Pin function, defined in soc.h
   \return      \ref  csi_error_t
 */
-csi_error_t csi_pin_set_mux(port_name_t port_name, pin_name_t pin_name, pin_func_t pin_func);
+csi_error_t csi_pin_set_mux(pin_name_t pin_name, pin_func_t pin_func);
 
 /**
   \brief       Get pin function
   \param[in]   pin_name    Pin name, defined in soc.h
   \return      pin function
 */
-pin_func_t csi_pin_get_mux(port_name_t port_name, pin_name_t pin_name);
+pin_func_t csi_pin_get_mux(pin_name_t pin_name);
 
 /**
   \brief       Set pin mode
@@ -94,7 +93,7 @@ pin_func_t csi_pin_get_mux(port_name_t port_name, pin_name_t pin_name);
   \param[in]   mode        Push/pull mode
   \return      \ref  csi_error_t
 */
-csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_pin_mode_t mode);
+csi_error_t csi_pin_mode(pin_name_t pin_name, csi_pin_mode_t mode);
 
 /**
   \brief       Set pin speed
@@ -102,7 +101,7 @@ csi_error_t csi_pin_mode(port_name_t port_name, pin_name_t pin_name, csi_pin_mod
   \param[in]   speed       Io speed
   \return      \ref  csi_error_t
 */
-csi_error_t csi_pin_speed(port_name_t port_name, pin_name_t pin_name, csi_pin_speed_t speed);
+csi_error_t csi_pin_speed(pin_name_t pin_name, csi_pin_speed_t speed);
 
 /**
   \brief       Set pin drive
@@ -110,7 +109,7 @@ csi_error_t csi_pin_speed(port_name_t port_name, pin_name_t pin_name, csi_pin_sp
   \param[in]   drive       Io drive
   \return      \ref  csi_error_t
 */
-csi_error_t csi_pin_drive(port_name_t port_name, pin_name_t pin_name, csi_pin_drive_t drive);
+csi_error_t csi_pin_drive(pin_name_t pin_name, csi_pin_drive_t drive);
 
 /**
   \brief       Config pin wakeup function
@@ -118,41 +117,41 @@ csi_error_t csi_pin_drive(port_name_t port_name, pin_name_t pin_name, csi_pin_dr
   \param[in]   enable      Enable wakeup function or not
   \return      \ref  csi_error_t
 */
-csi_error_t csi_pin_wakeup(port_name_t port_name, pin_name_t pin_name, bool enable);
+csi_error_t csi_pin_wakeup(pin_name_t pin_name, bool enable);
 
 /**
   \brief       Get ctrl idx by pin
   \param[in]   pin_name    Pin name, defined in soc.h
   \return      idx
 */
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_gpio_devidx(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_gpio_devidx(pin_name_t pin_name)
 {
     extern const csi_pinmap_t gpio_pinmap[];
-    return target_pin_to_devidx(port_name, pin_name, gpio_pinmap);
+    return target_pin_to_devidx(pin_name, gpio_pinmap);
 }
 
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_uart_devidx(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_uart_devidx(pin_name_t pin_name)
 {
     extern const csi_pinmap_t uart_pinmap[];
-    return target_pin_to_devidx(port_name, pin_name, uart_pinmap);
+    return target_pin_to_devidx(pin_name, uart_pinmap);
 }
 
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_iic_devidx(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_iic_devidx(pin_name_t pin_name)
 {
     extern const csi_pinmap_t iic_pinmap[];
-    return target_pin_to_devidx(port_name, pin_name, iic_pinmap);
+    return target_pin_to_devidx(pin_name, iic_pinmap);
 }
 
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_spi_devidx(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_spi_devidx(pin_name_t pin_name)
 {
     extern const csi_pinmap_t spi_pinmap[];
-    return target_pin_to_devidx(port_name, pin_name, spi_pinmap);
+    return target_pin_to_devidx(pin_name, spi_pinmap);
 }
 
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_i2s_devidx(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_i2s_devidx(pin_name_t pin_name)
 {
     extern  const csi_pinmap_t i2s_pinmap[];
-    return target_pin_to_devidx(port_name, pin_name, i2s_pinmap);
+    return target_pin_to_devidx(pin_name, i2s_pinmap);
 }
 
 /**
@@ -160,10 +159,10 @@ __ALWAYS_STATIC_INLINE uint32_t csi_pin_get_i2s_devidx(port_name_t port_name, pi
   \param[in]   pin_name    Pin name, defined in soc.h
   \return      idx
 */
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_adc_index(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_adc_index(pin_name_t pin_name)
 {
     extern const csi_pinmap_t adc_pinmap[];
-    return target_pin_to_index(port_name, pin_name, adc_pinmap);
+    return target_pin_to_index(pin_name, adc_pinmap);
 }
 
 /**
@@ -171,22 +170,22 @@ __ALWAYS_STATIC_INLINE uint32_t csi_pin_get_adc_index(port_name_t port_name, pin
   \param[in]   pin_name    Pin name, defined in soc.h
   \return      channel
 */
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_adc_channel(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_adc_channel(pin_name_t pin_name)
 {
     extern const csi_pinmap_t adc_pinmap[];
-    return target_pin_to_channel(port_name, pin_name, adc_pinmap);
+    return target_pin_to_channel(pin_name, adc_pinmap);
 }
 
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_pwm_channel(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_pwm_channel(pin_name_t pin_name)
 {
     extern const csi_pinmap_t pwm_pinmap[];
-    return target_pin_to_channel(port_name, pin_name, pwm_pinmap);
+    return target_pin_to_channel(pin_name, pwm_pinmap);
 }
 
-__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_gpio_channel(port_name_t port_name, pin_name_t pin_name)
+__ALWAYS_STATIC_INLINE uint32_t csi_pin_get_gpio_channel(pin_name_t pin_name)
 {
     extern const csi_pinmap_t gpio_pinmap[];
-    return target_pin_to_channel(port_name, pin_name, gpio_pinmap);
+    return target_pin_to_channel(pin_name, gpio_pinmap);
 }
 
 /**

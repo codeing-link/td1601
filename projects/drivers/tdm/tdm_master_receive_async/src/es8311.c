@@ -5,7 +5,7 @@
  */
 
 #include <string.h>
-#include <stdlib.h>
+
 #include "es8311_reg.h"
 #include "es8311.h"
 

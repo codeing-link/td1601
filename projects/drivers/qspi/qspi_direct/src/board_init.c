@@ -22,11 +22,9 @@ void board_init(void)
     __ChipInitHandler();
 
     console.uart_id = (uint32_t)CONSOLE_IDX;
-    console.baudrate = 921600;
-    console.tx.port = CONSOLE_TXD_PORT;
+    console.baudrate = 115200U;
     console.tx.pin = CONSOLE_TXD;
     console.tx.func = CONSOLE_TXD_FUNC;
-    console.rx.port = CONSOLE_RXD_PORT;
     console.rx.pin = CONSOLE_RXD;
     console.rx.func = CONSOLE_RXD_FUNC;
     console.uart = NULL;

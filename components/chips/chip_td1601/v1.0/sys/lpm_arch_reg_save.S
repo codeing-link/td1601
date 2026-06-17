@@ -30,7 +30,7 @@ arch_resume_context:
     lw      t1, 0(t0)
     li      t2, 0x30
     and     t1, t1, t2
-    li      t2, 0x30
+    li      t2, 0x20
     bgeu    t1, t2, arch_sp_resume_from_standby
 
 arch_sp_resume_from_stop:

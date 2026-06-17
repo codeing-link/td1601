@@ -1,8 +1,10 @@
+
+
 /******************************************************************************
  * @file     drv/ospi.h
  * @brief    Header File for OSPI Driver
  * @version  V1.0
- * @date     16. 4. 2026
+ * @date     08. Apr 2020
  * @model    ospi
  ******************************************************************************/
 
@@ -19,317 +21,307 @@ extern "C" {
 #endif
 
 /**
- * @enum csi_ospi_mode_t
- * @brief Operating mode of OSPI
+ *  \enum    csi_ospi_mode_t
+ *  \brief   Function mode of ospi
  */
 typedef enum {
-    OSPI_MASTER,              /**< Master mode */
-    OSPI_SLAVE,               /**< Slave mode */
+    OSPI_MASTER,             ///< OSPI Master (Output on MOSI, Input on MISO); arg = Bus Speed in bps
+    OSPI_SLAVE,              ///< OSPI Slave  (Output on MISO, Input on MOSI)
 } csi_ospi_mode_t;
 
 /**
- * @enum csi_ospi_line_mode_t
- * @brief Data bus width mode for OSPI transfer
+ *  \enum    csi_ospi_transfer_mode_t
+ *  \brief   Function mode of ospi
  */
 typedef enum {
-    OSPI_LINE_SINGLE,         /**< Single-line mode */
-    OSPI_LINE_DUAL,           /**< Dual-line mode */
-    OSPI_LINE_QUAD,           /**< Quad-line mode */
-    OSPI_LINE_OCTAL           /**< Octal-line mode */
-} csi_ospi_line_mode_t;
-
-/**
- * @enum csi_ospi_address_size_t
- * @brief Size of address phase in bits
- */
-typedef enum {
-    OSPI_ADDRESS_0_BITS = 0,      /**< No address phase */
-    OSPI_ADDRESS_8_BITS = 8,      /**< 8-bit address */
-    OSPI_ADDRESS_16_BITS = 16,     /**< 16-bit address */
-    OSPI_ADDRESS_24_BITS = 24,     /**< 24-bit address */
-    OSPI_ADDRESS_32_BITS = 32      /**< 32-bit address */
-} csi_ospi_address_size_t;
-
-/**
- * @enum csi_ospi_instruction_size_t
- * @brief Size of instruction phase in bits
- */
-typedef enum {
-    OSPI_INSTRUCTION_0_BITS = 0,  /**< No instruction phase */
-    OSPI_INSTRUCTION_4_BITS = 1,  /**< 4-bit instruction */
-    OSPI_INSTRUCTION_8_BITS = 2,  /**< 8-bit instruction */
-    OSPI_INSTRUCTION_16_BITS = 3 /**< 16-bit instruction */
-} csi_ospi_instruction_size_t;
-
-/**
- * @enum csi_ospi_alt_size_t
- * @brief Size of alternate byte phase in bits
- */
-typedef enum {
-    OSPI_ALT_0_BITS,          /**< No alternate byte phase */
-    OSPI_ALT_8_BITS,          /**< 8-bit alternate byte */
-    OSPI_ALT_16_BITS,         /**< 16-bit alternate byte */
-    OSPI_ALT_32_BITS          /**< 32-bit alternate byte */
-} csi_ospi_alt_size_t;
-
-/**
- * @enum csi_ospi_transfer_mode_t
- * @brief OSPI transfer direction mode
- */
-typedef enum {
-    OSPI_TRANSFER_SEND_RECEIVE,      /**< Full-duplex send and receive */
-    OSPI_TRANSFER_SEND_ONLY,         /**< Send only */
-    OSPI_TRANSFER_RECEIVE_ONLY,      /**< Receive only */
-    OSPI_TRANSFER_EEPROM_READ        /**< EEPROM read mode */
+    OSPI_TRANSFER_SEND_RECEIVE,
+    OSPI_TRANSFER_SEND_ONLY,
+    OSPI_TRANSFER_RECEIVE_ONLY,
+    OSPI_TRANSFER_EEPROM_READ
 } csi_ospi_transfer_mode_t;
 
 /**
- * @struct csi_ospi_command_t
- * @brief OSPI transfer command structure
- * @details Includes instruction, address, alternate, dummy cycles, and data configuration
- */
-typedef struct {
-    struct {
-        csi_ospi_line_mode_t          bus_width;  /**< Bus width for instruction phase */
-        csi_ospi_instruction_size_t   size;       /**< Bit size of instruction */
-        uint32_t                      value;
-        bool                          disabled;   /**< Disable instruction phase */
-    } instruction;
-
-    struct {
-        csi_ospi_line_mode_t          bus_width;  /**< Bus width for address phase */
-        csi_ospi_address_size_t       size;       /**< Bit size of address */
-        uint32_t                      value; 
-        bool                          disabled;   /**< Disable address phase */
-    } address;
-
-    struct {
-        csi_ospi_line_mode_t          bus_width;  /**< Bus width for alternate phase */
-        csi_ospi_alt_size_t           size;       /**< Bit size of alternate byte */
-        uint32_t                      value;
-        bool                          disabled;   /**< Disable alternate phase */
-    } alt;
-
-    struct {
-        csi_ospi_line_mode_t          bus_width;  /**< Bus width for data phase */
-        uint8_t                       frame_len;  /**< Data frame length */
-        csi_ospi_transfer_mode_t      transfer_mode;
-        bool                          disabled;   /**< Disable data phase */
-    } data;
-    
-    uint8_t                           dummy_count;/**< Number of dummy cycles */
-    uint8_t                           ddr_enable; /**< DDR double data rate enable */
-
-} csi_ospi_command_t;
-
-/**
- * @enum csi_ospi_cp_format_t
- * @brief OSPI clock polarity and phase format
+ *  \enum    csi_ospi_transfer_mode_t
+ *  \brief   Function mode of ospi
  */
 typedef enum {
-    OSPI_FORMAT_CPOL0_CPHA0 = 0,  /**< Clock low idle, sample on leading edge */
-    OSPI_FORMAT_CPOL0_CPHA1,      /**< Clock low idle, sample on trailing edge */
-    OSPI_FORMAT_CPOL1_CPHA0,      /**< Clock high idle, sample on leading edge */
-    OSPI_FORMAT_CPOL1_CPHA1       /**< Clock high idle, sample on trailing edge */
+    OSPI_LINE_SINGLE,
+    OSPI_LINE_DUAL,
+    OSPI_LINE_QUAD,
+    OSPI_LINE_OCTAL
+} csi_ospi_line_mode_t;
+
+/**
+ *  \enum     csi_ospi_frame_len_t
+ *  \brief    OSPI data width (4bit ~ 16bit)
+ */
+typedef enum {
+    OSPI_FRAME_LEN_4  = 4,
+    OSPI_FRAME_LEN_5,
+    OSPI_FRAME_LEN_6,
+    OSPI_FRAME_LEN_7,
+    OSPI_FRAME_LEN_8,
+    OSPI_FRAME_LEN_9,
+    OSPI_FRAME_LEN_10,
+    OSPI_FRAME_LEN_11,
+    OSPI_FRAME_LEN_12,
+    OSPI_FRAME_LEN_13,
+    OSPI_FRAME_LEN_14,
+    OSPI_FRAME_LEN_15,
+    OSPI_FRAME_LEN_16,
+    OSPI_FRAME_LEN_17,
+    OSPI_FRAME_LEN_18,
+    OSPI_FRAME_LEN_19,
+    OSPI_FRAME_LEN_20,
+    OSPI_FRAME_LEN_21,
+    OSPI_FRAME_LEN_22,
+    OSPI_FRAME_LEN_23,
+    OSPI_FRAME_LEN_24,
+    OSPI_FRAME_LEN_25,
+    OSPI_FRAME_LEN_26,
+    OSPI_FRAME_LEN_27,
+    OSPI_FRAME_LEN_28,
+    OSPI_FRAME_LEN_29,
+    OSPI_FRAME_LEN_30,
+    OSPI_FRAME_LEN_31,
+    OSPI_FRAME_LEN_32
+} csi_ospi_frame_len_t;
+
+/**
+ *  \enum     csi_ospi_format_t
+ *  \brief    Timing format of ospi
+ */
+typedef enum {
+    OSPI_FORMAT_CPOL0_CPHA0 = 0,  ///< Clock Polarity 0, Clock Phase 0
+    OSPI_FORMAT_CPOL0_CPHA1,      ///< Clock Polarity 0, Clock Phase 1
+    OSPI_FORMAT_CPOL1_CPHA0,      ///< Clock Polarity 1, Clock Phase 0
+    OSPI_FORMAT_CPOL1_CPHA1,      ///< Clock Polarity 1, Clock Phase 1
 } csi_ospi_cp_format_t;
 
 /**
- * @enum csi_ospi_event_t
- * @brief OSPI callback event types
+ *  \enum     csi_ospi_event_t
+ *  \brief    Signaled event for user by driver
  */
 typedef enum {
-    OSPI_EVENT_SEND_COMPLETE,           /**< Send operation completed */
-    OSPI_EVENT_RECEIVE_COMPLETE,        /**< Receive operation completed */
-    OSPI_EVENT_SEND_RECEIVE_COMPLETE,   /**< Send-receive operation completed */
-    OSPI_EVENT_ERROR_OVERFLOW,          /**< Receive overflow error */
-    OSPI_EVENT_ERROR_UNDERFLOW,         /**< Transmit underflow error */
-    OSPI_EVENT_ERROR                    /**< General hardware error */
+    OSPI_EVENT_SEND_COMPLETE,           ///< Data Send completed. Occurs after call to csi_ospi_send_async to indicate that all the data has been send over
+    OSPI_EVENT_RECEIVE_COMPLETE,        ///< Data Receive completed. Occurs after call to csi_ospi_receive_async to indicate that all the data has been received
+    OSPI_EVENT_SEND_RECEIVE_COMPLETE,   ///< Data Send_receive completed. Occurs after call to csi_ospi_send_receive_async to indicate that all the data has been send_received
+    OSPI_EVENT_ERROR_OVERFLOW,          ///< Data overflow: Receive overflow
+    OSPI_EVENT_ERROR_UNDERFLOW,         ///< Data underflow: Transmit underflow
+    OSPI_EVENT_ERROR                    ///< Master Mode Fault (SS deactivated when Master).Occurs in master mode when Slave Select is deactivated and indicates Master Mode Fault
 } csi_ospi_event_t;
 
 /**
- * @struct csi_ospi_t
- * @brief OSPI device handle structure
+ *  \struct     csi_ospi_t
+ *  \brief      Ctrl block of ospi instance
  */
 typedef struct csi_ospi csi_ospi_t;
 struct csi_ospi {
-    csi_dev_t    dev;          /**< Hardware device information */
-
-    void (*callback)(csi_ospi_t *ospi, csi_ospi_event_t event, void *arg);
-    void         *arg;         /**< User argument for callback */
-
-    uint8_t      *tx_data;     /**< Transmit data buffer */
-    uint32_t      tx_size;     /**< Transmit data size */
-    uint8_t      *rx_data;     /**< Receive data buffer */
-    uint32_t      rx_size;     /**< Receive data size */
+    csi_dev_t            dev;          ///< Hw-device info
+    void (*callback)(csi_ospi_t *ospi, csi_ospi_event_t event, void *arg); ///< User callback ,signaled by driver event
+    void                *arg;          ///< User private param ,passed to user callback
+    uint8_t             *tx_data;      ///< Output data buf
+    uint32_t             tx_size;      ///< Output data size specified by user
+    uint8_t             *rx_data;      ///< Input  data buf
+    uint32_t             rx_size;      ///< Input  data size specified by user
     csi_error_t (*send)(csi_ospi_t *ospi, const void *data, uint32_t size); ///< The send_async func
     csi_error_t (*receive)(csi_ospi_t *ospi, void *data, uint32_t size);    ///< The receive_async func
     csi_error_t (*send_receive)(csi_ospi_t *ospi, const void *data_out, void *data_in, uint32_t size); ///< The send_receive_async func
-    csi_state_t   state;       /**< Peripheral state */
-    csi_dma_ch_t *tx_dma;      /**< Transmit DMA channel */
-    csi_dma_ch_t *rx_dma;      /**< Receive DMA channel */
-    csi_ospi_command_t *cmd;   /*commmand data*/
-	uint8_t     cmd_sent;
-    void         *priv;        /**< Private data for low-level driver */
+    csi_state_t          state;        ///< Peripheral state
+    csi_dma_ch_t        *tx_dma;
+    csi_dma_ch_t        *rx_dma;
+    void                *priv;
 };
 
 /**
- * @brief  Initialize OSPI peripheral
- * @param  ospi: Pointer to OSPI handle
- * @param  idx: OSPI instance index
- * @return Error code
- */
+  \brief       Initialize OSPI Interface
+               Initialize the resources needed for the OSPI instance
+  \param[in]   ospi    OSPI handle
+  \param[in]   idx    OSPI instance index
+  \return      Error code
+*/
 csi_error_t csi_ospi_init(csi_ospi_t *ospi, uint32_t idx);
 
 /**
- * @brief  De-initialize OSPI peripheral
- * @param  ospi: Pointer to OSPI handle
- * @return None
- */
-void csi_ospi_uninit(csi_ospi_t *ospi);
+  \brief       De-initialize OSPI Interface
+               stops Operation and releases the software resources used by the ospi instance
+  \param[in]   ospi    Handle
+  \return      None 
+*/
+void    csi_ospi_uninit(csi_ospi_t *ospi);
 
 /**
- * @brief  De-initialize OSPI peripheral
- * @param  ospi: Pointer to OSPI handle
- * @return None
- */
-csi_error_t csi_ospi_config(csi_ospi_t *ospi, csi_ospi_command_t *cmd);
-
-/**
- * @brief  Attach callback function for OSPI events
- * @param  ospi: Pointer to OSPI handle
- * @param  callback: Event callback function
- * @param  arg: User-defined argument passed to callback
- * @return Error code
- */
+  \brief       Attach the callback handler to OSPI
+  \param[in]   ospi    Operate handle
+  \param[in]   callback    Callback function
+  \param[in]   arg         User can define it by himself as callback's param
+  \return      Error code
+*/
 csi_error_t csi_ospi_attach_callback(csi_ospi_t *ospi, void *callback, void *arg);
 
 /**
- * @brief  Detach OSPI event callback
- * @param  ospi: Pointer to OSPI handle
- * @return None
- */
-void csi_ospi_detach_callback(csi_ospi_t *ospi);
+  \brief       Detach the callback handler
+  \param[in]   ospi    Operate handle
+  \return      None
+*/
+void        csi_ospi_detach_callback(csi_ospi_t *ospi);
 
 /**
- * @brief  Set OSPI master or slave mode
- * @param  ospi: Pointer to OSPI handle
- * @param  mode: Operating mode
- * @return Error code
- */
+  \brief       Config ospi mode (master or slave)
+  \param[in]   ospi     OSPI handle
+  \param[in]   mode    The mode of ospi (master or slave)
+  \return      Error code
+*/
 csi_error_t csi_ospi_mode(csi_ospi_t *ospi, csi_ospi_mode_t mode);
 
 /**
- * @brief  Set OSPI clock polarity and phase
- * @param  ospi: Pointer to OSPI handle
- * @param  format: Clock format
- * @return Error code
- */
+  \brief       Config ospi transfer mode
+  \param[in]   ospi     OSPI handle
+  \param[in]   mode    The transfer mode of ospi
+  \return      Error code
+*/
+csi_error_t csi_ospi_transfer_mode(csi_ospi_t *ospi, csi_ospi_transfer_mode_t mode);
+
+/**
+  \brief       Config ospi line mode
+  \param[in]   ospi     OSPI handle
+  \param[in]   mode    The line mode of ospi
+  \return      Error code
+*/
+csi_error_t csi_ospi_line_mode(csi_ospi_t *ospi, csi_ospi_line_mode_t mode);
+
+/**
+  \brief       Config ospi cp format
+  \param[in]   ospi       OSPI handle
+  \param[in]   format    OSPI cp format
+  \return      Error code
+*/
 csi_error_t csi_ospi_cp_format(csi_ospi_t *ospi, csi_ospi_cp_format_t format);
 
 /**
- * @brief  Set OSPI baud rate
- * @param  ospi: Pointer to OSPI handle
- * @param  baud: Target baud rate
- * @return Actual configured baud rate
- */
+  \brief       Config ospi frame len
+  \param[in]   ospi       OSPI handle
+  \param[in]   length    OSPI frame len
+  \return      Error code
+*/
+csi_error_t csi_ospi_frame_len(csi_ospi_t *ospi, csi_ospi_frame_len_t length);
+
+/**
+  \brief       Config ospi work frequence
+  \param[in]   ospi     OSPI handle
+  \param[in]   baud    OSPI work baud
+  \return      the actual config frequency
+*/
 uint32_t csi_ospi_baud(csi_ospi_t *ospi, uint32_t baud);
 
 /**
- * @brief  Send data in blocking mode
- * @param  ospi: Pointer to OSPI handle
- * @param  data: Pointer to data buffer
- * @param  size: Number of bytes to send
- * @param  timeout: Timeout in milliseconds
- * @return Number of bytes sent or error code
- */
+  \brief       Sending data to OSPI transmitter,(received data is ignored)
+               blocking mode ,return unti all data has been sent or err happened
+  \param[in]   ospi        Handle to operate
+  \param[in]   data       Pointer to buffer with data to send to OSPI transmitter
+  \param[in]   size       Number of data to send(byte)
+  \param[in]   timeout    Unit in mini-second
+  \return      If send successful, this function shall return the num of data witch is sent successful
+               otherwise, the function shall return Error code
+*/
 int32_t csi_ospi_send(csi_ospi_t *ospi, const void *data, uint32_t size, uint32_t timeout);
 
 /**
- * @brief  Send data in non-blocking asynchronous mode
- * @param  ospi: Pointer to OSPI handle
- * @param  data: Pointer to data buffer
- * @param  size: Number of bytes to send
- * @return Error code
- */
+  \brief       Sending data to OSPI transmitter,(received data is ignored)
+               non-blocking mode,transfer done event will be signaled by driver
+  \param[in]   ospi     Handle to operate
+  \param[in]   data    Pointer to buffer with data to send to OSPI transmitter
+  \param[in]   size    Number of data items to send(byte)
+  \return      Error code
+*/
 csi_error_t csi_ospi_send_async(csi_ospi_t *ospi, const void *data, uint32_t size);
 
 /**
- * @brief  Receive data in blocking mode
- * @param  ospi: Pointer to OSPI handle
- * @param  data: Pointer to receive buffer
- * @param  size: Number of bytes to receive
- * @param  timeout: Timeout in milliseconds
- * @return Number of bytes received or error code
- */
+  \brief       Receiving data from OSPI receiver
+               blocking mode, return untill curtain data items are readed
+  \param[in]   ospi        Handle to operate
+  \param[out]  data       Pointer to buffer for data to receive from OSPI receiver
+  \param[in]   size       Number of data items to receive(byte)
+  \param[in]   timeout    Unit in mini-second
+  \return      If receive successful, this function shall return the num of data witch is  received successful
+               otherwise, the function shall return Error code
+*/
 int32_t csi_ospi_receive(csi_ospi_t *ospi, void *data, uint32_t size, uint32_t timeout);
 
 /**
- * @brief  Receive data in non-blocking asynchronous mode
- * @param  ospi: Pointer to OSPI handle
- * @param  data: Pointer to receive buffer
- * @param  size: Number of bytes to receive
- * @return Error code
- */
+  \brief       Receiving data from OSPI receiver
+               not-blocking mode, event will be signaled when receive done or err happend
+  \param[in]   ospi     Handle to operate
+  \param[out]  data    Pointer to buffer for data to receive from OSPI receiver
+  \param[in]   size    Number of data items to receive(byte)
+  \return      Error code
+*/
 csi_error_t csi_ospi_receive_async(csi_ospi_t *ospi, void *data, uint32_t size);
 
 /**
- * @brief  Full-duplex send and receive in blocking mode
- * @param  ospi: Pointer to OSPI handle
- * @param  data_out: Pointer to transmit buffer
- * @param  data_in: Pointer to receive buffer
- * @param  size: Number of bytes to transfer
- * @param  timeout: Timeout in milliseconds
- * @return Number of bytes transferred or error code
- */
+  \brief       Dulplex,sending and receiving data at the same time
+               \ref csi_ospi_event_t is signaled when operation completes or error happens
+               \ref csi_ospi_get_state can get operation status
+               blocking mode, this function returns after operation completes or error happens
+  \param[in]   ospi         OSPI handle to operate
+  \param[in]   data_out    Pointer to buffer with data to send to OSPI transmitter
+  \param[out]  data_in     Pointer to buffer for data to receive from OSPI receiver
+  \param[in]   size        Data size(byte)
+  \return      If transfer successful, this function shall return the num of data witch is transfer successful,
+               otherwise, the function shall return Error code
+*/
 int32_t csi_ospi_send_receive(csi_ospi_t *ospi, const void *data_out, void *data_in, uint32_t size, uint32_t timeout);
 
 /**
- * @brief  Full-duplex send and receive in non-blocking asynchronous mode
- * @param  ospi: Pointer to OSPI handle
- * @param  data_out: Pointer to transmit buffer
- * @param  data_in: Pointer to receive buffer
- * @param  size: Number of bytes to transfer
- * @return Error code
- */
+  \brief       Transmit first then receive ,receive will begin after transmit is done
+               if non-blocking mode, this function only starts the transfer,
+               \ref csi_ospi_event_t is signaled when operation completes or error happens
+               \ref csi_ospi_get_state can get operation status
+  \param[in]   ospi         OSPI handle to operate
+  \param[in]   data_out    Pointer to buffer with data to send to OSPI transmitter
+  \param[out]  data_in     Pointer to buffer for data to receive from OSPI receiver
+  \param[in]   size        Data size(byte)
+  \return      Error code
+*/
 csi_error_t csi_ospi_send_receive_async(csi_ospi_t *ospi, const void *data_out, void *data_in, uint32_t size);
 
-/**
- * @brief  Select slave device in master mode
- * @param  ospi: Pointer to OSPI handle
- * @param  slave_num: Slave index
- * @return None
+/*
+  \brief       Set slave select num. Only valid for master
+  \param[in]   handle       OSPI handle to operate
+  \param[in]   slave_num    OSPI slave num
+  \return      None
  */
 void csi_ospi_select_slave(csi_ospi_t *ospi, uint32_t slave_num);
 
 /**
- * @brief  Link DMA channels to OSPI
- * @param  ospi: Pointer to OSPI handle
- * @param  tx_dma: TX DMA channel handle, NULL to unlink
- * @param  rx_dma: RX DMA channel handle, NULL to unlink
- * @return Error code
- */
+  \brief       Link DMA channel to ospi device
+  \param[in]   ospi       OSPI handle to operate
+  \param[in]   tx_dma    The DMA channel handle for send, when it is NULL means to unlink the channel
+  \param[in]   rx_dma    The DMA channel handle for receive, when it is NULL means to unlink the channel
+  \return      Error code
+*/
 csi_error_t csi_ospi_link_dma(csi_ospi_t *ospi, csi_dma_ch_t *tx_dma, csi_dma_ch_t *rx_dma);
 
 /**
- * @brief  Get current OSPI state
- * @param  ospi: Pointer to OSPI handle
- * @param  state: Pointer to state structure
- * @return Error code
- */
+  \brief       Get the state of ospi device
+  \param[in]   ospi      OSPI handle to operate
+  \param[out]  state    The state of ospi device
+  \return      Error code
+*/
 csi_error_t csi_ospi_get_state(csi_ospi_t *ospi, csi_state_t *state);
 
 /**
- * @brief  Enable OSPI power management
- * @param  ospi: Pointer to OSPI handle
- * @return Error code
- */
+  \brief       Enable ospi power manage
+  \param[in]   ospi  OSPI handle to operate
+  \return      Error code
+*/
 csi_error_t csi_ospi_enable_pm(csi_ospi_t *ospi);
 
 /**
- * @brief  Disable OSPI power management
- * @param  ospi: Pointer to OSPI handle
- * @return None
- */
+  \brief       Disable ospi power manage
+  \param[in]   ospi    OSPI handle to operate
+  \return      Error code
+*/
 void csi_ospi_disable_pm(csi_ospi_t *ospi);
 
 #ifdef __cplusplus

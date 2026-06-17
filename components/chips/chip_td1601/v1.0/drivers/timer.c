@@ -94,24 +94,6 @@ csi_error_t csi_timer_start(csi_timer_t *timer, uint32_t timeout_us)
 
     return ret;
 }
-
-csi_error_t csi_timer_start_cycle(csi_timer_t *timer, uint32_t cycles)
-{
-    CSI_PARAM_CHK(timer, CSI_ERROR);
-    csi_error_t ret = CSI_OK;
-    dw_timer_regs_t *timer_base = (dw_timer_regs_t *)HANDLE_REG_BASE(timer);
-
-    dw_timer_set_mode_load(timer_base);
-
-    dw_timer_write_load(timer_base, cycles - 1);
-
-    dw_timer_set_disable(timer_base);
-    dw_timer_set_enable(timer_base);
-    dw_timer_set_unmask(timer_base);
-
-    return ret;
-}
-
 /**
   \brief       Stop timer
   \param[in]   timer    handle timer handle to operate

@@ -1,0 +1,1 @@
+Obj/chip_config.o Obj/src_board_init.o Obj/src_example_gpio_toggle.o 

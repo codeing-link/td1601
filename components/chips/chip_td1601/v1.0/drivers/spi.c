@@ -33,7 +33,6 @@ static csi_error_t dw_spi_send_intr(csi_spi_t *spi, const void *data, uint32_t s
 static csi_error_t dw_spi_receive_intr(csi_spi_t *spi, void *data, uint32_t size);
 static csi_error_t dw_spi_send_receive_intr(csi_spi_t *spi, const void *data_out, void *data_in, uint32_t num);
 
-#if 0
 static uint8_t find_max_prime_num(uint32_t num, uint32_t limit)
 {
     uint32_t i, min;
@@ -55,10 +54,9 @@ static uint8_t find_max_prime_num(uint32_t num, uint32_t limit)
 
     return (uint8_t)i;
 }
-#endif
+
 static uint8_t find_group_len(uint32_t size, uint8_t width)
 {
-#if 0
     uint8_t  prime_num;
     uint32_t limit;
 
@@ -70,25 +68,6 @@ static uint8_t find_group_len(uint32_t size, uint8_t width)
     } while ((prime_num % width) != 0U);
 
     return prime_num;
-#else
-    uint8_t ret;
-    if (size % width) {
-        return 0;
-    }
-    uint32_t num = size / width;
-    if (!(num % (DW_MAX_SPI_TXFIFO_LV))) {
-        ret = (DW_MAX_SPI_TXFIFO_LV);
-    } else if (!(num % (DW_MAX_SPI_TXFIFO_LV/2))) {
-        ret = (DW_MAX_SPI_TXFIFO_LV/2);
-    } else if (!(num % (DW_MAX_SPI_TXFIFO_LV/4))) {
-        ret = (DW_MAX_SPI_TXFIFO_LV/4);
-    } else if (!(num % (DW_MAX_SPI_TXFIFO_LV/8))) {
-        ret = (DW_MAX_SPI_TXFIFO_LV/8);
-    } else {
-        ret = 1U;
-    }
-    return ret;
-#endif
 }
 
 static csi_error_t wait_ready_until_timeout(csi_spi_t *spi, uint32_t timeout)
@@ -1005,7 +984,6 @@ static csi_error_t dw_spi_receive_dma(csi_spi_t *spi, void *data, uint32_t size)
 
         config.src_inc = DMA_ADDR_CONSTANT;
         config.dst_inc = DMA_ADDR_INC;
-        // config.group_len = 1;
         config.group_len = find_group_len(size, 1U << (uint8_t)config.src_tw);
         config.trans_dir = DMA_PERH2MEM;
         config.handshake = spi_rx_hs_num[spi->dev.idx];
@@ -1018,7 +996,6 @@ static csi_error_t dw_spi_receive_dma(csi_spi_t *spi, void *data, uint32_t size)
 
         dw_spi_set_rx_mode(spi_base);
         dw_spi_config_rx_data_len(spi_base, spi->rx_size - 1U);
-        // dw_spi_config_dma_rx_data_level(spi_base, 0);
         dw_spi_config_dma_rx_data_level(spi_base, (uint32_t)config.group_len / ((uint32_t)1U << (uint32_t)config.src_tw) - 1U);
         dw_spi_enable_rx_dma(spi_base);
 
@@ -1307,8 +1284,8 @@ static csi_error_t dw_spi_send_receive_dma(csi_spi_t *spi, const void *data_out,
         config.src_inc = DMA_ADDR_INC;
         config.dst_inc = DMA_ADDR_CONSTANT;
         config.group_len = DW_DEFAULT_SPI_TXFIFO_LV;
-        config.group_len = find_group_len(size, 1U << (uint8_t)config.src_tw);
-        // config.group_len = 1;
+        // config.group_len = find_group_len(size, 1U << (uint8_t)config.src_tw);
+        config.group_len = 1;
         config.trans_dir = DMA_MEM2PERH;
         config.handshake = spi_tx_hs_num[spi->dev.idx];
         csi_dma_ch_config(dma_ch, &config);
@@ -1317,8 +1294,8 @@ static csi_error_t dw_spi_send_receive_dma(csi_spi_t *spi, const void *data_out,
         dma_ch   = (csi_dma_ch_t *)spi->rx_dma;
         config.src_inc = DMA_ADDR_CONSTANT;
         config.dst_inc = DMA_ADDR_INC;
-        config.group_len = find_group_len(size, 1U << (uint8_t)config.src_tw);
-        // config.group_len = 1;
+        // config.group_len = find_group_len(size, 1U << (uint8_t)config.src_tw);
+        config.group_len = 1;
         config.trans_dir = DMA_PERH2MEM;
         config.handshake = spi_rx_hs_num[spi->dev.idx];
         csi_dma_ch_config(dma_ch, &config);
@@ -1327,8 +1304,8 @@ static csi_error_t dw_spi_send_receive_dma(csi_spi_t *spi, const void *data_out,
         dw_spi_disable(spi_base);
         dw_spi_set_tx_rx_mode(spi_base);
         dw_spi_config_rx_data_len(spi_base, spi->rx_size - 1U);
-        dw_spi_config_dma_rx_data_level(spi_base, (uint32_t)config.group_len / ((uint32_t)1U << (uint32_t)config.src_tw) - 1U);
-        // dw_spi_config_dma_rx_data_level(spi_base, 0);
+        // dw_spi_config_dma_rx_data_level(spi_base, (uint32_t)config.group_len / ((uint32_t)1U << (uint32_t)config.src_tw) - 1U);
+        dw_spi_config_dma_rx_data_level(spi_base, 0);
         dw_spi_enable_rx_dma(spi_base);
         dw_spi_enable_tx_dma(spi_base);
 
