@@ -13,12 +13,17 @@
 #include "board_config.h"
 #include "board_init.h"
 
+/* GPIO 翻转示例（定义在 gpio_toggle.c），内部为死循环，不会返回 */
+extern void gpio_toggle(void);
+
 int main(void)
 {
     board_init();
 
     printf("Hello World!\n");
-    CSI_EXAMPLE_RESULT(1);
+
+    /* 启动 PA24 GPIO 翻转，驱动 LED 闪烁 */
+    gpio_toggle();
 
     return 0;
 }
