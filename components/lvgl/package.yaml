@@ -1,0 +1,77 @@
+name: lvgl
+version: V1.0.0
+description: LVGL embedded graphics library (v9.x)
+type: common
+yoc_version: V1.0.0
+
+build_config:
+  include:
+    - ..
+
+  cflag: '-Og -Wno-unused-function -Wno-unused-variable'
+  cxxflag: '-Og'
+
+  define:
+    LV_CONF_INCLUDE_SIMPLE: 1
+
+source_file:
+  - src/lv_init.c
+  - src/core/*.c
+  - src/debugging/sysmon/*.c
+  - src/display/*.c
+  - src/draw/*.c
+  - src/draw/sw/*.c
+  - src/draw/sw/blend/*.c
+  - src/draw/convert/*.c
+  - src/draw/snapshot/*.c
+  - src/font/*.c
+  - src/font/fmt_txt/*.c
+  - src/indev/*.c
+  - src/layouts/*.c
+  - src/layouts/flex/*.c
+  - src/layouts/grid/*.c
+  - src/libs/bin_decoder/*.c
+  - src/misc/*.c
+  - src/misc/cache/*.c
+  - src/misc/cache/class/*.c
+  - src/misc/cache/instance/*.c
+  - src/osal/lv_os.c
+  - src/osal/lv_os_none.c
+  - src/stdlib/builtin/*.c
+  - src/stdlib/clib/*.c
+  - src/stdlib/lv_mem.c
+  - src/themes/*.c
+  - src/themes/default/*.c
+  - src/themes/simple/*.c
+  - src/themes/mono/*.c
+  - src/tick/*.c
+  - src/widgets/arc/*.c
+  - src/widgets/bar/*.c
+  - src/widgets/button/*.c
+  - src/widgets/buttonmatrix/*.c
+  - src/widgets/calendar/*.c
+  - src/widgets/canvas/*.c
+  - src/widgets/chart/*.c
+  - src/widgets/checkbox/*.c
+  - src/widgets/dropdown/*.c
+  - src/widgets/image/*.c
+  - src/widgets/imagebutton/*.c
+  - src/widgets/keyboard/*.c
+  - src/widgets/label/*.c
+  - src/widgets/led/*.c
+  - src/widgets/line/*.c
+  - src/widgets/list/*.c
+  - src/widgets/menu/*.c
+  - src/widgets/msgbox/*.c
+  - src/widgets/roller/*.c
+  - src/widgets/scale/*.c
+  - src/widgets/slider/*.c
+  - src/widgets/span/*.c
+  - src/widgets/spinbox/*.c
+  - src/widgets/spinner/*.c
+  - src/widgets/switch/*.c
+  - src/widgets/table/*.c
+  - src/widgets/tabview/*.c
+  - src/widgets/textarea/*.c
+  - src/widgets/tileview/*.c
+  - src/widgets/win/*.c
