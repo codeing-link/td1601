@@ -228,6 +228,7 @@ static const st77916_init_cmd_t vendor_specific_init_new[] = {
     {0xF3, {0x01}, 1, 0},
     {0xF0, {0x00}, 1, 0},
     {0x21, {0x00}, 1, 0},
+    {0x3A, {0x55}, 1, 0},     /* COLMOD：RGB565，每像素 2 字节 */
     {0x11, {0x00}, 1, 120},   /* SLEEP OUT，需等 120ms */
     {0x29, {0x00}, 1, 0},     /* DISPLAY ON */
 };
@@ -293,11 +294,14 @@ static int lcd_write_cmd(uint8_t cmd, const uint8_t *data, uint32_t len)
 
 /*
  * 写显存色数据。
- * ST77916 QSPI 写色数据格式：0x32(单线) opcode + 24bit 地址(高8bit=0x2C 写显存, 单线)
- * + 像素数据(四线 QUAD)。
+ * ST77916 QSPI 写色数据格式：0x32(单线) + 24bit地址高字节=0x2C(单线) + 像素数据(四线QUAD)。
  *
- * 利用 SDK 特性：data.bus_width = QUAD 时，csi_ospi_send 会自动先发
- * instruction.value(0x32) 与 address.value(0x2C<<8)，再用四线发数据。
+ * 重要：csi_ospi_send 在 bus_width != SINGLE 时会自动把 instruction/address 压入 FIFO，
+ * 不能再手动构造含 opcode+addr 的 frame buffer，否则会多发一次地址导致像素数据错位花屏。
+ * 这里只把纯像素字节传入，让硬件 instruction/address phase 自动处理头部。
+ *
+ * address.bus_width 设为 SINGLE，TRANS_TYPE 由驱动选 01（指令单线，地址FRF=QUAD），
+ * 但 ST77916 要求地址也走单线。因此两者都设为 SINGLE，TRANS_TYPE=00（全单线头部）。
  */
 static int lcd_write_color(const uint8_t *data, uint32_t len)
 {
@@ -310,20 +314,26 @@ static int lcd_write_color(const uint8_t *data, uint32_t len)
     s_cmd.instruction.disabled  = false;
     s_cmd.address.bus_width     = OSPI_LINE_SINGLE;
     s_cmd.address.size          = OSPI_ADDRESS_24_BITS;
-    s_cmd.address.value         = ((uint32_t)0x2C) << 8;   /* 0x2C: RAMWR 写显存 */
+    s_cmd.address.value         = ((uint32_t)0x2C) << 8;  /* 0x002C00: RAMWR */
     s_cmd.address.disabled      = false;
     s_cmd.alt.disabled          = true;
     s_cmd.dummy_count           = 0;
-    s_cmd.data.bus_width        = OSPI_LINE_QUAD;          /* 色数据走四线 */
-    s_cmd.data.frame_len        = 8;
+    s_cmd.data.bus_width        = OSPI_LINE_QUAD;          /* 像素数据走四线 */
+    s_cmd.data.frame_len        = 16;  /* 16-bit frame：MCU 小端存储的 uint16_t 经 DR 写入后 MSB 先发，修复字节序 */
     s_cmd.data.transfer_mode    = OSPI_TRANSFER_SEND_ONLY;
     s_cmd.data.disabled         = false;
 
     csi_ospi_config(&s_ospi, &s_cmd);
 
+  
+    csi_ospi_baud(&s_ospi, 10 * 1000000);
+
     LCD_CS_LOW();
     ret = csi_ospi_send(&s_ospi, data, len, LCD_OSPI_TIMEOUT);
     LCD_CS_HIGH();
+
+    /* 恢复原波特率 */
+    csi_ospi_baud(&s_ospi, LCD_OSPI_BAUD_HZ);
 
     if ((uint32_t)ret != len) {
         return -1;
