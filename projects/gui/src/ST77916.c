@@ -467,6 +467,53 @@ void LCD_addWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yen
     lcd_write_color((const uint8_t *)color, pixels * 2);
 }
 
+/*
+ * 仅设置显示窗口坐标（CASET + RASET），不发 RAMWR，不发像素。
+ * 配合 LCD_writeRowData() 使用：先调用本函数锁定矩形区域，
+ * 再逐行调用 LCD_writeRowData()——每次调用内部都会完整发
+ * 0x32(opcode) + 0x002C00(RAMWR addr) + 像素数据，ST77916 会
+ * 按 CASET/RASET 锁定的窗口自动递增地址，逐行填满整块区域。
+ *
+ * 注意：不要在这里额外发 0x2C，否则与 lcd_write_color 里的
+ * instruction/address 相位重复，导致命令帧错位、屏幕不显示。
+ */
+void LCD_setWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend)
+{
+    uint8_t caset[4];
+    uint8_t raset[4];
+
+    caset[0] = (uint8_t)(Xstart >> 8);
+    caset[1] = (uint8_t)(Xstart & 0xFF);
+    caset[2] = (uint8_t)(Xend >> 8);
+    caset[3] = (uint8_t)(Xend & 0xFF);
+    lcd_write_cmd(0x2A, caset, 4);
+
+    raset[0] = (uint8_t)(Ystart >> 8);
+    raset[1] = (uint8_t)(Ystart & 0xFF);
+    raset[2] = (uint8_t)(Yend >> 8);
+    raset[3] = (uint8_t)(Yend & 0xFF);
+    lcd_write_cmd(0x2B, raset, 4);
+    /* RAMWR(0x2C) 由 lcd_write_color 内部的 instruction/address 相位自动发出，
+     * 这里不额外发，否则重复触发导致帧头错位 */
+}
+
+/*
+ * 在已由 LCD_setWindow 锁定的窗口中，连续写入一行像素数据。
+ *
+ * 重要限制：lcd_write_color 每次都携带完整的 RAMWR(0x2C) 命令头，
+ * ST77916 每收到一次 RAMWR 就把写指针复位到窗口左上角。
+ * 因此本函数实际上等价于重新发一次 RAMWR + 数据，连续调用时
+ * 每行都从窗口顶部开始写，不能实现真正的"接续写"。
+ *
+ * 使用方式：配合 LCD_setWindow 后逐行调用，每行 y 坐标通过
+ * LCD_setWindow 重新指定，或直接使用 LCD_addWindow 单行方式。
+ * 此接口保留供兼容，内部实现与 lcd_write_color 相同。
+ */
+void LCD_writeRowData(const uint16_t *color, uint16_t count)
+{
+    lcd_write_color((const uint8_t *)color, (uint32_t)count * 2U);
+}
+
 /* ===========================================================================
  * 点亮自测：画几条彩条，验证 QSPI 通路与刷屏
  * =========================================================================*/

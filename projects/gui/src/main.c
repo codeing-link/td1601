@@ -15,6 +15,7 @@
 #include "board_init.h"
 #include "ST77916.h"
 #include "CST816.h"
+#include "lfs_test.h"
 
 int main(void)
 {
@@ -28,7 +29,10 @@ int main(void)
     /* 2. 初始化触摸：I2C + 复位 + 读 ID + INT 中断 */
     Touch_Init();
 
-    /* 3. 主循环：有触摸事件则读坐标并打印 */
+    /* 3. LittleFS 功能测试：写彩条图片 + 读回显示到 LCD */
+    lfs_test_run();
+
+    /* 4. 主循环：有触摸事件则读坐标并打印 */
     cst816_data_t touch;
     while (1) {
         if (Touch_Poll(&touch)) {

@@ -64,6 +64,7 @@ INCLUDES := \
 	-Iinclude \
 	-Iinclude/sys \
 	-Isrc \
+	-Isrc/littlefs \
 	-I$(CHIP)/include \
 	-I$(CHIP)/sys \
 	-I$(CONSOLE) \
@@ -115,7 +116,9 @@ PROJ_SRCS := \
 	src/board_init.c \
 	src/gpio_toggle.c \
 	src/ST77916.c \
-	src/CST816.c
+	src/CST816.c \
+	src/lfs_port.c \
+	src/lfs_test.c
 
 # Files at project root (not under src/)
 ROOT_SRCS := \
@@ -127,6 +130,8 @@ PROJ_OBJS := \
 	$(OBJ)/src_gpio_toggle.o \
 	$(OBJ)/src_ST77916.o \
 	$(OBJ)/src_CST816.o \
+	$(OBJ)/src_lfs_port.o \
+	$(OBJ)/src_lfs_test.o \
 	$(OBJ)/chip_config.o
 
 # ============================================================================
@@ -309,6 +314,14 @@ $(OBJ)/src_CST816.o: src/CST816.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 
+$(OBJ)/src_lfs_port.o: src/lfs_port.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_lfs_test.o: src/lfs_test.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
 $(OBJ)/chip_config.o: chip_config.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
@@ -328,6 +341,28 @@ $(OBJ)/liblvgl.a: $(LVGL_OBJS)
 	$(AR) rcs $@ $^
 
 # ============================================================================
+# Component: littlefs (v2.9.3)
+# ============================================================================
+LFS_DIR  := src/littlefs
+LFS_SRCS := $(LFS_DIR)/lfs.c $(LFS_DIR)/lfs_util.c
+LFS_OBJS := $(OBJ)/lfs_lfs.o $(OBJ)/lfs_lfs_util.o
+
+$(OBJ)/lfs_lfs.o: $(LFS_DIR)/lfs.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) \
+		-DLFS_NO_ASSERT -DLFS_NO_DEBUG -DLFS_NO_WARN \
+		-o $@ $<
+
+$(OBJ)/lfs_lfs_util.o: $(LFS_DIR)/lfs_util.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) \
+		-DLFS_NO_ASSERT -DLFS_NO_DEBUG -DLFS_NO_WARN \
+		-o $@ $<
+
+$(OBJ)/liblittlefs.a: $(LFS_OBJS)
+	$(AR) rcs $@ $^
+
+# ============================================================================
 # Link
 # ============================================================================
 LIBS := \
@@ -336,7 +371,8 @@ LIBS := \
 	$(OBJ)/libcsi.a \
 	$(OBJ)/libminilibc.a \
 	$(OBJ)/libmm.a \
-	$(OBJ)/liblvgl.a
+	$(OBJ)/liblvgl.a \
+	$(OBJ)/liblittlefs.a
 
 ELF  := $(OBJ)/$(PROJECT).elf
 BIN  := $(OBJ)/$(PROJECT).bin
@@ -349,7 +385,7 @@ $(ELF): $(PROJ_OBJS) $(LIBS)
 	@mkdir -p $(LST)
 	$(CC) $(PROJ_OBJS) \
 		-Wl,--start-group \
-		-lchip_td1601 -lconsole -lcsi -lminilibc -lmm -llvgl \
+		-lchip_td1601 -lconsole -lcsi -lminilibc -lmm -llvgl -llittlefs \
 		-Wl,--end-group \
 		$(LDFLAGS) -o $@
 	$(OBJDUMP) -d $@ > $(LST)/$(PROJECT).asm

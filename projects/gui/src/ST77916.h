@@ -101,6 +101,12 @@ void LCD_Init(void);
 /* 设置显示窗口并写入一块色数据；color 指向 RGB565 像素数组 */
 void LCD_addWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend, uint16_t *color);
 
+/* 仅设置显示窗口（CASET + RASET + RAMWR 命令），不发像素数据 */
+void LCD_setWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend);
+
+/* 向当前已打开的窗口写入一行像素数据（配合 LCD_setWindow 使用） */
+void LCD_writeRowData(const uint16_t *color, uint16_t count);
+
 /* 背光初始化（已在 LCD_Init 内调用） */
 void Backlight_Init(void);
 /* 背光亮度设置：开关式，Light==0 灭，>0 亮（保留 0~100 接口形态） */
