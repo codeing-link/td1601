@@ -36,7 +36,14 @@ extern "C" {
  * OSPI 总线参数（DW_OSPI0 控制器，idx 0）
  * =========================================================================*/
 #define LCD_OSPI_IDX                 (0)             /* OSPI 控制器索引 */
-#define LCD_OSPI_BAUD_HZ             (40 * 1000000)  /* OSPI 波特率，40MHz */
+/* 命令波特率：10MHz，单线模式，用于 CASET/RASET 等初始化及窗口命令
+ *   参考工程 TFT_SPI_Write_Byte 使用 120*100000 ≈ 12MHz，此处取整 10MHz */
+#define LCD_OSPI_CMD_BAUD_HZ         (10 * 1000000)  /* 命令/参数波特率，10MHz  */
+/* 数据波特率：50MHz，QUAD 四线模式，用于像素数据传输
+ *   参考工程 LCD_startWriteMutileData 使用 500*100000 = 50MHz */
+#define LCD_OSPI_DATA_BAUD_HZ        (50 * 1000000)  /* 像素数据波特率，50MHz  */
+/* 兼容旧接口：OSPI_Init 初始化时使用命令波特率作为默认值 */
+#define LCD_OSPI_BAUD_HZ             LCD_OSPI_CMD_BAUD_HZ
 
 /* ST77916 QSPI 操作码（与 ESP esp_lcd_st77916 一致）
  *   0x02：单线写命令/参数；0x32：四线写显存色数据 */
