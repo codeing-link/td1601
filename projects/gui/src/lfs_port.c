@@ -175,6 +175,20 @@ int lfs_port_mount(void)
 }
 
 /**
+ * @brief  强制格式化 LittleFS（需在 unmount 后调用，格式化后需重新 mount）
+ */
+int lfs_port_format(void)
+{
+    int ret = lfs_format(&s_lfs, &s_lfs_cfg);
+    if (ret != LFS_ERR_OK) {
+        printf("[lfs] format failed (%d)\r\n", ret);
+        return -1;
+    }
+    printf("[lfs] formatted OK\r\n");
+    return 0;
+}
+
+/**
  * @brief  卸载 LittleFS
  */
 void lfs_port_unmount(void)

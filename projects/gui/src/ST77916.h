@@ -39,9 +39,8 @@ extern "C" {
 /* 命令波特率：10MHz，单线模式，用于 CASET/RASET 等初始化及窗口命令
  *   参考工程 TFT_SPI_Write_Byte 使用 120*100000 ≈ 12MHz，此处取整 10MHz */
 #define LCD_OSPI_CMD_BAUD_HZ         (10 * 1000000)  /* 命令/参数波特率，10MHz  */
-/* 数据波特率：50MHz，QUAD 四线模式，用于像素数据传输
- *   参考工程 LCD_startWriteMutileData 使用 500*100000 = 50MHz */
-#define LCD_OSPI_DATA_BAUD_HZ        (50 * 1000000)  /* 像素数据波特率，50MHz  */
+/* 数据波特率：QUAD 四线模式，用于像素数据传输 */
+#define LCD_OSPI_DATA_BAUD_HZ        (50 * 1000000)
 /* 兼容旧接口：OSPI_Init 初始化时使用命令波特率作为默认值 */
 #define LCD_OSPI_BAUD_HZ             LCD_OSPI_CMD_BAUD_HZ
 

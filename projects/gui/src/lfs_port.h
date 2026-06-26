@@ -34,10 +34,15 @@ extern "C" {
 #define LFS_BLOCK_COUNT         (LFS_PART_SIZE / LFS_SECTOR_SIZE)
 
 /**
- * @brief  初始化 LittleFS：挂载已有文件系统，若格式化检测失败则自动格式化
- * @return 0 成功，负值失败
+ * @brief  挂载 LittleFS
  */
 int lfs_port_mount(void);
+
+/**
+ * @brief  强制格式化 LittleFS（清空所有数据，下次 mount 前必须调用）
+ * @return 0 成功，负值失败
+ */
+int lfs_port_format(void);
 
 /**
  * @brief  卸载 LittleFS

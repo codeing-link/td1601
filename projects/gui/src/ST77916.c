@@ -27,9 +27,8 @@
 /* 直接寄存器访问，对齐参考工程写法 */
 #define DWOSPI  ((dw_ospi_regs_t *)DW_OSPI0_BASE)
 
-/* OSPI 句柄与命令描述符（DW_OSPI0 控制器） */
+/* OSPI 句柄（DW_OSPI0 控制器） */
 static csi_ospi_t s_ospi;
-static csi_ospi_command_t s_cmd;
 
 /* 控制 IO 用的 GPIO 端口句柄（CS=PA15 / RST=PA7 / 背光=PA4，同属端口 A） */
 static csi_gpio_t s_lcd_gpio;
@@ -242,40 +241,49 @@ static const st77916_init_cmd_t vendor_specific_init_new[] = {
  * =========================================================================*/
 
 /*
- * 写命令 + 可选参数。
- * 整帧单线发送，指令/地址相位关闭，全部走 data 相位手动发出。
+ * 写命令 + 可选参数（单线 10MHz，直接操作寄存器）。
+ * 对齐参考工程 TFT_SPI_Write_Byte：每帧 disable→baud→enable，直写 DR。
+ * 完全不使用 csi_ospi_send，与 lcd_write_color 路径统一，避免状态机混用。
  */
 static int lcd_write_cmd(uint8_t cmd, const uint8_t *data, uint32_t len)
 {
-    static uint8_t frame[4 + 16];
-    uint32_t total;
-    int32_t ret;
+    /* 等总线空闲，确保上次传输已完成 */
+    while (!(DWOSPI->SR & DW_OSPI_SR_TFE));
+    while (DWOSPI->SR  & DW_OSPI_SR_BUSY);
 
-    frame[0] = LCD_OPCODE_WRITE_CMD;
-    frame[1] = 0x00;
-    frame[2] = cmd;
-    frame[3] = 0x00;
-    for (uint32_t i = 0; i < len && i < 16; i++) {
-        frame[4 + i] = data[i];
-    }
-    total = 4 + ((len < 16) ? len : 16);
-
-    memset(&s_cmd, 0, sizeof(s_cmd));
-    s_cmd.instruction.disabled = true;
-    s_cmd.address.disabled     = true;
-    s_cmd.alt.disabled         = true;
-    s_cmd.dummy_count          = 0;
-    s_cmd.data.bus_width       = OSPI_LINE_SINGLE;
-    s_cmd.data.frame_len       = 8;
-    s_cmd.data.transfer_mode   = OSPI_TRANSFER_SEND_ONLY;
-    s_cmd.data.disabled        = false;
-    csi_ospi_config(&s_ospi, &s_cmd);
+    /* 切到 10MHz 单线 8-bit（命令用低速，保证时序稳定） */
+    dw_ospi_disable(DWOSPI);
+    csi_ospi_baud(&s_ospi, LCD_OSPI_BAUD_HZ);   /* 10MHz */
+    /* 确保 CTRLR0: SPI_FRF=单线，DFS=8bit，SPI_CTRL0=0 */
+    DWOSPI->CTRLR0 = (DWOSPI->CTRLR0 & ~DW_OSPI_CTRLR0_SPI_FRF_Msk);
+    DWOSPI->CTRLR0 = (DWOSPI->CTRLR0 & ~DW_OSPI_CTRLR0_DFS_Msk)
+                   | (0x7U << DW_OSPI_CTRLR0_DFS_Pos);
+    DWOSPI->SPI_CTRL0 = 0U;
+    dw_ospi_enable(DWOSPI);
 
     LCD_CS_LOW();
-    ret = csi_ospi_send(&s_ospi, frame, total, LCD_OSPI_TIMEOUT);
-    LCD_CS_HIGH();
 
-    return ((uint32_t)ret != total) ? -1 : 0;
+    /* 帧头：0x02 + 0x00 + cmd + 0x00 */
+    DWOSPI->DR = LCD_OPCODE_WRITE_CMD;   /* 0x02 */
+    while (!(DWOSPI->SR & DW_OSPI_SR_TFNF));
+    DWOSPI->DR = 0x00U;
+    while (!(DWOSPI->SR & DW_OSPI_SR_TFNF));
+    DWOSPI->DR = (uint32_t)cmd;
+    while (!(DWOSPI->SR & DW_OSPI_SR_TFNF));
+    DWOSPI->DR = 0x00U;
+
+    /* 参数字节 */
+    for (uint32_t i = 0; i < len && i < 16; i++) {
+        while (!(DWOSPI->SR & DW_OSPI_SR_TFNF));
+        DWOSPI->DR = data[i];
+    }
+
+    /* 等发送完成 */
+    while (!(DWOSPI->SR & DW_OSPI_SR_TFE));
+    while (DWOSPI->SR  & DW_OSPI_SR_BUSY);
+
+    LCD_CS_HIGH();
+    return 0;
 }
 
 /*
@@ -293,12 +301,12 @@ static int lcd_write_cmd(uint8_t cmd, const uint8_t *data, uint32_t len)
  */
 static int lcd_write_color(const uint8_t *data, uint32_t len)
 {
-    /* ---- step1: 50MHz 单线发帧头 ---- */
+    /* ---- step1: 低速单线发帧头 ---- */
     while (!(DWOSPI->SR & DW_OSPI_SR_TFE));
     while (DWOSPI->SR  & DW_OSPI_SR_BUSY);
 
     dw_ospi_disable(DWOSPI);
-    csi_ospi_baud(&s_ospi, LCD_OSPI_DATA_BAUD_HZ);  /* 50MHz，发帧头+像素 */
+    csi_ospi_baud(&s_ospi, LCD_OSPI_CMD_BAUD_HZ);
     dw_ospi_enable(DWOSPI);
 
     LCD_CS_LOW();
@@ -309,12 +317,28 @@ static int lcd_write_color(const uint8_t *data, uint32_t len)
     while (!(DWOSPI->SR & DW_OSPI_SR_TFE));
     while (DWOSPI->SR  & DW_OSPI_SR_BUSY);
 
-    /* ---- step2: 切 QUAD 16bit，CS 保持拉低，直写像素 ---- */
+    /* ---- step2: 切 QUAD 16-bit，CS 保持拉低，直写像素 ---- */
+    /* DW OSPI 16-bit QUAD 模式下，DR 写入 uint16_t 时，
+     * 硬件按 [15:12][11:8][7:4][3:0] 顺序发 4 个 nibble。
+     * 但实际行为等效于：先发低字节的 2 个 nibble，再发高字节的 2 个 nibble
+     * （小端 DR 存储顺序导致），所以需要 bswap16 修正字节序。
+     * 例：0xF800(红) → bswap → 0x00F8 → 发出 [0,0,F,8] → 屏幕重组 0x00F8
+     * 但 0x00F8 不是红色……
+     * 实际上正确做法：写入值本身不变，但 DW OSPI 16-bit QUAD 发送顺序
+     * 是 nibble [15:12] 先，屏幕接收 4 个 nibble 后重组 16-bit，
+     * 第一个 nibble 对应 bit[15:12]，这是正确的 MSB-first 顺序。
+     * 之前彩条正确说明 16-bit 模式字节序本身没问题，
+     * 渐变出错是因为某些特定值在 FIFO 里触发了 DW OSPI 的 8-bit split 行为。
+     * 解决方案：强制 TMOD=TX only，确保不触发 RX split */
     dw_ospi_disable(DWOSPI);
+    csi_ospi_baud(&s_ospi, LCD_OSPI_DATA_BAUD_HZ);
     DWOSPI->CTRLR0 = (DWOSPI->CTRLR0 & ~DW_OSPI_CTRLR0_SPI_FRF_Msk)
                    | DW_OSPI_CTRLR0_SPI_FRF_QUAD;
     DWOSPI->CTRLR0 = (DWOSPI->CTRLR0 & ~DW_OSPI_CTRLR0_DFS_Msk)
-                   | (0xFU << DW_OSPI_CTRLR0_DFS_Pos);
+                   | (0xFU << DW_OSPI_CTRLR0_DFS_Pos);   /* DFS=15 → 16-bit 帧 */
+    /* TMOD=TX only，防止接收路径干扰发送 */
+    DWOSPI->CTRLR0 = (DWOSPI->CTRLR0 & ~DW_OSPI_CTRLR0_TMOD_Msk)
+                   | DW_OSPI_CTRLR0_TMOD_TX;
     DWOSPI->SPI_CTRL0 = 0x302U;
     dw_ospi_enable(DWOSPI);
 
@@ -345,8 +369,7 @@ static int lcd_write_color(const uint8_t *data, uint32_t len)
  * 复位 / 初始化
  * =========================================================================*/
 
-/* OSPI 数据/时钟引脚复用：D0-D3 = PB4-PB7，SCK = PA28
- *   数据线必须加上拉，否则四线读写时序异常导致屏不亮（参考 ospi 例子）。 */
+/* OSPI 数据/时钟引脚复用：D0-D3 = PB4-PB7，SCK = PA28 */
 static void lcd_ospi_pin_init(void)
 {
     csi_pin_set_mux(LCD_OSPI_D0_PORT,  LCD_OSPI_D0_PIN,  LCD_OSPI_D0_FUNC);
@@ -355,11 +378,18 @@ static void lcd_ospi_pin_init(void)
     csi_pin_set_mux(LCD_OSPI_D3_PORT,  LCD_OSPI_D3_PIN,  LCD_OSPI_D3_FUNC);
     csi_pin_set_mux(LCD_OSPI_SCK_PORT, LCD_OSPI_SCK_PIN, LCD_OSPI_SCK_FUNC);
 
-    /* 四条数据线加上拉 */
-    csi_pin_mode(LCD_OSPI_D0_PORT, LCD_OSPI_D0_PIN, GPIO_MODE_PULLUP);
-    csi_pin_mode(LCD_OSPI_D1_PORT, LCD_OSPI_D1_PIN, GPIO_MODE_PULLUP);
-    csi_pin_mode(LCD_OSPI_D2_PORT, LCD_OSPI_D2_PIN, GPIO_MODE_PULLUP);
-    csi_pin_mode(LCD_OSPI_D3_PORT, LCD_OSPI_D3_PIN, GPIO_MODE_PULLUP);
+    /* 高速推挽输出不使用内部上拉，避免改变边沿和线间一致性。 */
+    csi_pin_mode(LCD_OSPI_D0_PORT,  LCD_OSPI_D0_PIN,  GPIO_MODE_PULLNONE);
+    csi_pin_mode(LCD_OSPI_D1_PORT,  LCD_OSPI_D1_PIN,  GPIO_MODE_PULLNONE);
+    csi_pin_mode(LCD_OSPI_D2_PORT,  LCD_OSPI_D2_PIN,  GPIO_MODE_PULLNONE);
+    csi_pin_mode(LCD_OSPI_D3_PORT,  LCD_OSPI_D3_PIN,  GPIO_MODE_PULLNONE);
+    csi_pin_mode(LCD_OSPI_SCK_PORT, LCD_OSPI_SCK_PIN, GPIO_MODE_PULLNONE);
+
+    csi_pin_drive(LCD_OSPI_D0_PORT,  LCD_OSPI_D0_PIN,  PIN_DRIVE_LV3);
+    csi_pin_drive(LCD_OSPI_D1_PORT,  LCD_OSPI_D1_PIN,  PIN_DRIVE_LV3);
+    csi_pin_drive(LCD_OSPI_D2_PORT,  LCD_OSPI_D2_PIN,  PIN_DRIVE_LV3);
+    csi_pin_drive(LCD_OSPI_D3_PORT,  LCD_OSPI_D3_PIN,  PIN_DRIVE_LV3);
+    csi_pin_drive(LCD_OSPI_SCK_PORT, LCD_OSPI_SCK_PIN, PIN_DRIVE_LV3);
 }
 
 /* GPIO 控制脚初始化：CS=PA15、RST=PA7、背光=PA4，均为推挽输出 */
@@ -408,6 +438,15 @@ static int OSPI_Init(void)
     csi_ospi_baud(&s_ospi, LCD_OSPI_BAUD_HZ);
     csi_ospi_cp_format(&s_ospi, OSPI_FORMAT_CPOL0_CPHA0);
     csi_ospi_select_slave(&s_ospi, 0);
+
+    /* 确保初始状态：TX only + 单线 8-bit */
+    dw_ospi_disable(DWOSPI);
+    dw_ospi_set_tx_mode(DWOSPI);
+    DWOSPI->CTRLR0 = (DWOSPI->CTRLR0 & ~DW_OSPI_CTRLR0_SPI_FRF_Msk);
+    DWOSPI->CTRLR0 = (DWOSPI->CTRLR0 & ~DW_OSPI_CTRLR0_DFS_Msk)
+                   | (0x7U << DW_OSPI_CTRLR0_DFS_Pos);
+    DWOSPI->SPI_CTRL0 = 0U;
+    dw_ospi_enable(DWOSPI);
 
     /* 3. 遍历厂商命令表逐条下发 */
     uint32_t n = sizeof(vendor_specific_init_new) / sizeof(vendor_specific_init_new[0]);

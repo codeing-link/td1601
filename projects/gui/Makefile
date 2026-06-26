@@ -65,6 +65,7 @@ INCLUDES := \
 	-Iinclude/sys \
 	-Isrc \
 	-Isrc/littlefs \
+	-Isrc/TJpgDec \
 	-I$(CHIP)/include \
 	-I$(CHIP)/sys \
 	-I$(CONSOLE) \
@@ -118,7 +119,10 @@ PROJ_SRCS := \
 	src/ST77916.c \
 	src/CST816.c \
 	src/lfs_port.c \
-	src/lfs_test.c
+	src/lfs_test.c \
+	src/TJpgDec/tjpgd.c \
+	src/jpg_display.c \
+	src/img_1.c
 
 # Files at project root (not under src/)
 ROOT_SRCS := \
@@ -132,6 +136,9 @@ PROJ_OBJS := \
 	$(OBJ)/src_CST816.o \
 	$(OBJ)/src_lfs_port.o \
 	$(OBJ)/src_lfs_test.o \
+	$(OBJ)/src_TJpgDec_tjpgd.o \
+	$(OBJ)/src_jpg_display.o \
+	$(OBJ)/src_img_1.o \
 	$(OBJ)/chip_config.o
 
 # ============================================================================
@@ -319,6 +326,18 @@ $(OBJ)/src_lfs_port.o: src/lfs_port.c
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 
 $(OBJ)/src_lfs_test.o: src/lfs_test.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_TJpgDec_tjpgd.o: src/TJpgDec/tjpgd.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_jpg_display.o: src/jpg_display.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_img_1.o: src/img_1.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 
