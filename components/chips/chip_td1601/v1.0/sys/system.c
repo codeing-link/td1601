@@ -116,7 +116,7 @@ static void sys_spiflash_init(void)
 {
     csi_spiflash_qspi_init(&g_spiflash, 0U, NULL);
     csi_spiflash_config_data_line(&g_spiflash, SPIFLASH_DATA_4_LINES);
-    csi_spiflash_frequence(&g_spiflash, 12000000U);
+    csi_spiflash_frequence(&g_spiflash, 33000000U);
 }
 
 /**

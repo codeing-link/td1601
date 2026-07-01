@@ -5,7 +5,7 @@
 # xPack riscv-none-elf-gcc (which ships the rv32imafdc_zicsr/ilp32d multilib).
 #
 # Usage:
-#   make                 # incremental build -> Obj/lvgl.elf / .bin / .ihex
+#   make                 # incremental build -> Obj/gui.elf / .bin / .ihex
 #   make clean           # remove Obj/
 #   make clean && make   # full rebuild
 #   make TOOLCHAIN_DIR=/path/to/xpack    # override toolchain location
@@ -45,8 +45,6 @@ MM       := $(COMP)/mm/v1.0
 BOARD    := $(BOARDS)/td1601_evb/v1.0
 
 LDSCRIPT := $(BOARD)/gcc_flash.ld
-LVGL     := $(COMP)/lvgl
-
 OBJ      := Obj
 LST      := Lst
 
@@ -76,8 +74,6 @@ INCLUDES := \
 	-I$(MINILIBC)/include \
 	-I$(MM)/include \
 	-I$(BOARD)/include \
-	-I$(LVGL) \
-	-I$(LVGL)/src \
 	-I$(COMP)
 
 # ---- Preprocessor defines (from project package.yaml def_config) -----------
@@ -89,9 +85,7 @@ DEFINES := \
 	-DCONFIG_XIP=1 \
 	-DCONFIG_CHIP_TD1601=1 \
 	-DCONFIG_SUPPORT_TSPEND=1 \
-	-DCONFIG_CPU_E906FD=1 \
-	-DLV_LVGL_H_INCLUDE_SIMPLE=1 \
-	-DLV_CONF_INCLUDE_SIMPLE=1
+	-DCONFIG_CPU_E906FD=1
 
 # ---- Common / C / ASM flags ------------------------------------------------
 COMMON_FLAGS := $(ARCH_FLAGS) -Os -g $(COMPAT) $(INCLUDES) $(DEFINES) \
@@ -346,20 +340,6 @@ $(OBJ)/chip_config.o: chip_config.c
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 
 # ============================================================================
-# Component: lvgl (v9.5.0)
-# 用 $(shell find) 收集所有 .c，对象文件放到 Obj/lvgl/ 子目录保持层次。
-# ============================================================================
-LVGL_SRCS := $(shell find $(LVGL)/src -name "*.c")
-LVGL_OBJS := $(patsubst $(LVGL)/src/%.c,$(OBJ)/lvgl/%.o,$(LVGL_SRCS))
-
-$(OBJ)/lvgl/%.o: $(LVGL)/src/%.c
-	@mkdir -p $(dir $@)
-	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
-
-$(OBJ)/liblvgl.a: $(LVGL_OBJS)
-	$(AR) rcs $@ $^
-
-# ============================================================================
 # Component: littlefs (v2.9.3)
 # ============================================================================
 LFS_DIR  := src/littlefs
@@ -390,7 +370,6 @@ LIBS := \
 	$(OBJ)/libcsi.a \
 	$(OBJ)/libminilibc.a \
 	$(OBJ)/libmm.a \
-	$(OBJ)/liblvgl.a \
 	$(OBJ)/liblittlefs.a
 
 ELF  := $(OBJ)/$(PROJECT).elf
@@ -404,7 +383,7 @@ $(ELF): $(PROJ_OBJS) $(LIBS)
 	@mkdir -p $(LST)
 	$(CC) $(PROJ_OBJS) \
 		-Wl,--start-group \
-		-lchip_td1601 -lconsole -lcsi -lminilibc -lmm -llvgl -llittlefs \
+		-lchip_td1601 -lconsole -lcsi -lminilibc -lmm -llittlefs \
 		-Wl,--end-group \
 		$(LDFLAGS) -o $@
 	$(OBJDUMP) -d $@ > $(LST)/$(PROJECT).asm
