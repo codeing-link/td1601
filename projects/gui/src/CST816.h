@@ -35,11 +35,11 @@ extern "C" {
 
 /* I2C 引脚（IIC0：SDA=PA9, SCL=PA8，按实际接线） */
 #define CST816_SDA_PORT              PORTA
-#define CST816_SDA_PIN               PIN9
-#define CST816_SDA_FUNC              PA9_IIC0_SDA
+#define CST816_SDA_PIN               PIN20//PIN9
+#define CST816_SDA_FUNC              PA20_IIC0_SDA//PA9_IIC0_SDA
 #define CST816_SCL_PORT              PORTA
-#define CST816_SCL_PIN               PIN8
-#define CST816_SCL_FUNC              PA8_IIC0_SCL
+#define CST816_SCL_PIN               PIN21//PIN8
+#define CST816_SCL_FUNC              PA21_IIC0_SCL//PA8_IIC0_SCL
 
 /* ===========================================================================
  * 控制 IO 引脚（替代原 TCA9554 EXIO1 / ESP GPIO4，按实际接线）

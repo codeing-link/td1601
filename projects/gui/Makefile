@@ -101,7 +101,9 @@ DEPFLAGS = -MMD -MP
 #  --specs=nano.specs : link newlib-nano (much smaller printf/scanf footprint)
 LDFLAGS := -nostartfiles --specs=nano.specs -Wl,--gc-sections \
 	-T$(LDSCRIPT) $(ARCH_FLAGS) -L$(OBJ) -Wl,-zmax-page-size=1024 \
-	-Wl,-Map=$(LST)/$(PROJECT).map
+	-Wl,-Map=$(LST)/$(PROJECT).map \
+	-Wl,--wrap=printf -Wl,--wrap=vprintf \
+	-Wl,--wrap=puts -Wl,--wrap=putchar -Wl,--wrap=fputc
 
 # ============================================================================
 # Project sources (this directory - editable)
@@ -109,6 +111,7 @@ LDFLAGS := -nostartfiles --specs=nano.specs -Wl,--gc-sections \
 PROJ_SRCS := \
 	src/main.c \
 	src/board_init.c \
+	src/gui_uart.c \
 	src/gpio_toggle.c \
 	src/ST77916.c \
 	src/CST816.c \
@@ -125,6 +128,7 @@ ROOT_SRCS := \
 PROJ_OBJS := \
 	$(OBJ)/src_main.o \
 	$(OBJ)/src_board_init.o \
+	$(OBJ)/src_gui_uart.o \
 	$(OBJ)/src_gpio_toggle.o \
 	$(OBJ)/src_ST77916.o \
 	$(OBJ)/src_CST816.o \
@@ -300,6 +304,10 @@ $(OBJ)/src_main.o: src/main.c
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 
 $(OBJ)/src_board_init.o: src/board_init.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_gui_uart.o: src/gui_uart.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 

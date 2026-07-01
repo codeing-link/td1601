@@ -12,8 +12,11 @@
 #include <drv/uart.h>
 #include "board_config.h"
 #include "console/sys_console.h"
+#include "gui_uart.h"
 
+#if GUI_UART_MODE == GUI_UART_MODE_LOG
 sys_console_t console;
+#endif
 
 extern void __ChipInitHandler(void);
 
@@ -21,6 +24,8 @@ void board_init(void)
 {
     __ChipInitHandler();
 
+#if GUI_UART_MODE == GUI_UART_MODE_LOG
+    /* 默认日志模式：初始化 console 组件，printf 通过 UART0 输出调试日志。 */
     console.uart_id = (uint32_t)CONSOLE_IDX;
     console.baudrate = 921600;
     console.tx.port = CONSOLE_TXD_PORT;
@@ -32,5 +37,13 @@ void board_init(void)
     console.uart = NULL;
 
     console_init(&console);
+#elif GUI_UART_MODE == GUI_UART_MODE_DATA
+    /*
+     * 普通串口模式：UART0 不再作为专用日志口使用，改为业务数据收发。
+     * 接收由 UART 中断搬运到软件环形缓冲区，业务代码调用 gui_uart_read() 读取。
+     */
+    (void)gui_uart_data_init();
+#else
+#error "Unsupported GUI_UART_MODE"
+#endif
 }
-

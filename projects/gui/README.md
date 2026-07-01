@@ -8,7 +8,8 @@
 
 1. `board_init()`
    - 执行芯片启动初始化。
-   - 初始化调试串口，波特率为 921600。
+   - 当前默认把 UART0 初始化为普通数据串口，波特率为 921600，接收使用中断。
+   - 如把 `src/gui_uart.h` 中的 `GUI_UART_MODE` 改成 `GUI_UART_MODE_LOG`，UART0 会恢复为日志串口，`printf()` 正常输出。
 
 2. `LCD_Init()`
    - 初始化 LCD 控制 GPIO：CS=PA15、RST=PA7、背光=PA4。
@@ -30,8 +31,8 @@
    - 每个 MCU 块直接调用 `LCD_addWindow()` 写入 LCD，无需整帧 framebuffer。
 
 5. 主循环
-   - `Touch_Poll()` 有触摸事件时读取并打印 `x/y/points`。
-   - 每 10ms 轮询一次。
+   - `GUI_UART_MODE_DATA` 模式下做串口回环测试：上位机下发什么数据，设备就原样回发什么数据。
+   - `GUI_UART_MODE_LOG` 模式下，`Touch_Poll()` 有触摸事件时读取并打印 `x/y/points`。
 
 ## LCD 通路
 
@@ -144,9 +145,56 @@ JPEG 显示文件：
 
 设备启动后会自动把新的 `img_1_jpg[]` 同步到 LittleFS 的 `/img/1.jpg`，再解码显示。
 
+## UART0 模式开关
+
+GUI 工程当前默认把 UART0 作为普通数据串口使用。串口引脚来自板级配置：
+
+- TX：PA18，`PA18_UART0_TX`
+- RX：PA17，`PA17_UART0_RX`
+- UART：`CONSOLE_IDX = 0`
+- 默认波特率：921600
+
+模式开关位于 `src/gui_uart.h`：
+
+```c
+#define GUI_UART_MODE_LOG       0
+#define GUI_UART_MODE_DATA      1
+
+#ifndef GUI_UART_MODE
+#define GUI_UART_MODE           GUI_UART_MODE_DATA
+#endif
+```
+
+两种模式：
+
+- `GUI_UART_MODE_DATA`：当前默认模式。`board_init()` 调用 `gui_uart_data_init()`，UART0 初始化为 8N1，RX FIFO 可读中断会把数据搬到 2048 字节软件环形缓冲区；`printf()` 被重定向为空函数，不会输出日志。
+- `GUI_UART_MODE_LOG`：日志模式。`board_init()` 调用 `console_init()`，UART0 专门用于日志打印，`printf()` 正常输出。
+
+当前 `src/main.c` 在 DATA 模式下内置了一个串口回环测试：
+
+```c
+uint32_t rx_len = gui_uart_read(uart_echo_buf, sizeof(uart_echo_buf));
+if (rx_len > 0U) {
+    (void)gui_uart_send(uart_echo_buf, rx_len);
+}
+```
+
+普通串口模式可用接口：
+
+```c
+int32_t gui_uart_send(const uint8_t *data, uint32_t len);
+uint32_t gui_uart_available(void);
+uint32_t gui_uart_read(uint8_t *buf, uint32_t len);
+uint8_t gui_uart_rx_overflowed(void);
+void gui_uart_clear_rx(void);
+```
+
+注意：UART0 只有一路硬件资源。DATA 模式下日志默认关闭，避免日志字节混入普通串口协议。
+
 ## 主要源文件
 
 - `src/main.c`：主流程入口。
+- `src/gui_uart.c/h`：UART0 日志/普通串口模式开关，普通串口中断接收和发送接口。
 - `src/ST77916.c/h`：LCD 初始化、窗口设置、RGB565 像素写入、背光控制。
 - `src/CST816.c/h`：触摸初始化、中断标志、坐标读取。
 - `src/lfs_port.c/h`：LittleFS 到 SPI Flash 的底层适配。
