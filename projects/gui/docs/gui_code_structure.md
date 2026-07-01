@@ -289,10 +289,10 @@ const char *fs_image_get_final_path(void);
 当前默认最大图片大小：
 
 ```c
-#define FS_IMAGE_MAX_FILE_SIZE (56U * 1024U)
+#define FS_IMAGE_MAX_FILE_SIZE (120U * 1024U)
 ```
 
-该限制用于给 64KB LittleFS 分区预留元数据空间。
+该限制用于给 128KB LittleFS 分区预留元数据空间。
 
 ## 8. JPEG 解码显示层
 

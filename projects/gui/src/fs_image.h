@@ -17,9 +17,9 @@ extern "C" {
 #define FS_IMAGE_MAX_NAME_LEN   64U
 #define FS_IMAGE_MAX_PATH_LEN   (FS_IMAGE_MAX_NAME_LEN + 2U)
 
-/* 64KB LittleFS 分区需要预留元数据空间，默认限制接收文件不超过 56KB。 */
+/* 128KB LittleFS 分区需要预留元数据空间，默认限制单个接收文件不超过 120KB。 */
 #ifndef FS_IMAGE_MAX_FILE_SIZE
-#define FS_IMAGE_MAX_FILE_SIZE  (56U * 1024U)
+#define FS_IMAGE_MAX_FILE_SIZE  (120U * 1024U)
 #endif
 
 /* LittleFS 写入和元数据需要预留空间，避免估算刚好够但实际写入失败。 */

@@ -71,12 +71,12 @@ LittleFS 移植文件：
 Flash 布局：
 
 - Flash XIP 起始地址：`0x18000000`
-- 代码和只读数据：`0x18000000 ~ 0x1806FFFF`
-- LittleFS 分区：`0x18070000 ~ 0x1807FFFF`
-- LittleFS 分区大小：64KB
+- 代码和只读数据：`0x18000000 ~ 0x1805FFFF`
+- LittleFS 分区：`0x18060000 ~ 0x1807FFFF`
+- LittleFS 分区大小：128KB
 - Block/Sector：4KB
 - Page：256B
-- Block 数量：16
+- Block 数量：32
 
 注意事项：
 
@@ -161,7 +161,7 @@ image_update_init(&g_ble_transport);
 - 正式图：按 START 包里的文件名保存到根目录，例如 `1.jpg` -> `/1.jpg`，`2.jpg` -> `/2.jpg`。
 - 只有完整接收并且 CRC32 校验成功后，才执行删除同名旧文件和 rename。
 - 接收失败会删除 `/image_tmp.jpg`，不会破坏已存在的正式图片。
-- DATA 模式接收开始时会清理旧调试路径 `/img/1.jpg`，避免历史内置图片占用 64KB LittleFS 分区导致新图写入空间不足。
+- DATA 模式接收开始时会清理旧调试路径 `/img/1.jpg`，避免历史内置图片占用 128KB LittleFS 分区导致新图写入空间不足。
 - START 时会先检查 LittleFS 剩余空间。如果空间不足，MCU 返回 `STORAGE_FULL`，PC 脚本会提示是否格式化 LittleFS。
 
 协议字段全部使用小端格式。CRC16 使用 CRC-16/CCITT-FALSE，CRC32 使用标准 ZIP/以太网 CRC32。
@@ -170,7 +170,7 @@ image_update_init(&g_ble_transport);
 
 - `FT_MAX_CHUNK_SIZE = 512`
 - 默认 PC 发送 chunk 为 240，用于模拟 BLE 透传小包。
-- `FS_IMAGE_MAX_FILE_SIZE = 56KB`，给 64KB LittleFS 分区预留元数据空间。
+- `FS_IMAGE_MAX_FILE_SIZE = 120KB`，给 128KB LittleFS 分区预留元数据空间。
 
 ## 串口发送 JPG 测试
 

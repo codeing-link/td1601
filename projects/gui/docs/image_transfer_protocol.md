@@ -131,7 +131,7 @@ Sender 发送，用于声明即将传输的 JPG 文件。
 - `chunk_size > 0`
 - `chunk_size <= 512`
 - `filename_len <= 64`
-- 当前固件还限制 JPG 文件大小不超过 LittleFS 可用空间，默认最大约 56KB。
+- 当前固件还限制 JPG 文件大小不超过 LittleFS 可用空间，默认单文件最大约 120KB。
 
 Receiver 校验通过后：
 

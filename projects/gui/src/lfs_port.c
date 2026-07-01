@@ -123,7 +123,7 @@ static const struct lfs_config s_lfs_cfg = {
     .read_size      = 1,              /* 最小读单元（字节） */
     .prog_size      = LFS_PAGE_SIZE,  /* 最小写单元 = 1 page = 256B */
     .block_size     = LFS_SECTOR_SIZE,/* 擦除单元   = 1 sector = 4KB */
-    .block_count    = LFS_BLOCK_COUNT,/* 16 个 block */
+    .block_count    = LFS_BLOCK_COUNT,/* 32 个 block */
     .cache_size     = LFS_PAGE_SIZE,  /* 256B 读写缓存（减小 RAM 占用） */
     .lookahead_size = 16,             /* lookahead 缓冲（16B = 128 bit） */
     .block_cycles   = 500,            /* 磨损均衡：500 次擦写后自动迁移 */
