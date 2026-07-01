@@ -26,7 +26,7 @@ extern "C" {
  * 注意：UART0 只有一路硬件资源。DATA 模式下日志默认关闭，避免日志字节混入业务数据。
  */
 #ifndef GUI_UART_MODE
-#define GUI_UART_MODE           GUI_UART_MODE_LOG//GUI_UART_MODE_DATA
+#define GUI_UART_MODE           GUI_UART_MODE_DATA
 #endif
 
 /* 普通串口模式参数，默认复用日志串口的高速波特率。 */

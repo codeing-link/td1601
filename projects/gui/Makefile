@@ -112,6 +112,12 @@ PROJ_SRCS := \
 	src/main.c \
 	src/board_init.c \
 	src/gui_uart.c \
+	src/transport_uart.c \
+	src/transport_ble.c \
+	src/file_transfer.c \
+	src/fs_image.c \
+	src/jpeg_viewer.c \
+	src/app_image_update.c \
 	src/gpio_toggle.c \
 	src/ST77916.c \
 	src/CST816.c \
@@ -129,6 +135,12 @@ PROJ_OBJS := \
 	$(OBJ)/src_main.o \
 	$(OBJ)/src_board_init.o \
 	$(OBJ)/src_gui_uart.o \
+	$(OBJ)/src_transport_uart.o \
+	$(OBJ)/src_transport_ble.o \
+	$(OBJ)/src_file_transfer.o \
+	$(OBJ)/src_fs_image.o \
+	$(OBJ)/src_jpeg_viewer.o \
+	$(OBJ)/src_app_image_update.o \
 	$(OBJ)/src_gpio_toggle.o \
 	$(OBJ)/src_ST77916.o \
 	$(OBJ)/src_CST816.o \
@@ -308,6 +320,30 @@ $(OBJ)/src_board_init.o: src/board_init.c
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 
 $(OBJ)/src_gui_uart.o: src/gui_uart.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_transport_uart.o: src/transport_uart.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_transport_ble.o: src/transport_ble.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_file_transfer.o: src/file_transfer.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_fs_image.o: src/fs_image.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_jpeg_viewer.o: src/jpeg_viewer.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_app_image_update.o: src/app_image_update.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 

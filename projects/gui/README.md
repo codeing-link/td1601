@@ -1,6 +1,6 @@
 # GUI 工程说明
 
-该工程运行在 TD1601 EVB 裸机环境中，当前功能是初始化 ST77916 QSPI LCD、初始化 CST816 触摸控制器，把编译进固件的 JPEG 图片同步到 LittleFS，再通过 TJpgDec 流式解码显示到屏幕。主循环中持续轮询触摸事件并打印坐标。
+该工程运行在 TD1601 EVB 裸机环境中，当前默认功能是初始化 ST77916 QSPI LCD、初始化 CST816 触摸控制器，通过 UART 接收 JPG 文件，保存到 LittleFS，校验成功后按文件名保存为正式图片，再通过 TJpgDec 从 LittleFS 流式解码显示到屏幕。
 
 ## 启动流程
 
@@ -8,7 +8,7 @@
 
 1. `board_init()`
    - 执行芯片启动初始化。
-   - 当前默认把 UART0 初始化为普通数据串口，波特率为 921600，接收使用中断。
+   - 当前默认 `GUI_UART_MODE_DATA` 下不初始化日志口，UART0 由 `transport_uart` 在图片更新应用初始化时接管。
    - 如把 `src/gui_uart.h` 中的 `GUI_UART_MODE` 改成 `GUI_UART_MODE_LOG`，UART0 会恢复为日志串口，`printf()` 正常输出。
 
 2. `LCD_Init()`
@@ -23,15 +23,13 @@
    - RST=PA12，INT=PA11，INT 使用下降沿中断。
    - 中断回调只置位标志，主循环通过 `Touch_Poll()` 读取坐标。
 
-4. `jpg_display_run()`
+4. `image_update_init(&g_uart_transport)`
    - 挂载 LittleFS。
-   - 检查 `/img/1.jpg` 是否与当前编译进固件的 `img_1_jpg[]` 一致。
-   - 文件不存在、大小不同或内容不同都会重写 LittleFS 中的 `/img/1.jpg`。
-   - 使用 TJpgDec 从 LittleFS 文件流式读取 JPEG，解码输出 RGB565。
-   - 每个 MCU 块直接调用 `LCD_addWindow()` 写入 LCD，无需整帧 framebuffer。
+   - 初始化 UART transport，UART RX 中断只负责把字节放入 2048 字节 ring buffer。
+   - 初始化文件传输状态机，等待 PC 或未来 BLE App 发送 START/DATA/END 包。
 
 5. 主循环
-   - `GUI_UART_MODE_DATA` 模式下做串口回环测试：上位机下发什么数据，设备就原样回发什么数据。
+   - `GUI_UART_MODE_DATA` 模式下调用 `image_update_poll()`，从 transport 取字节，解析协议，写 LittleFS，完成后自动显示刚收到的 JPG。
    - `GUI_UART_MODE_LOG` 模式下，`Touch_Poll()` 有触摸事件时读取并打印 `x/y/points`。
 
 ## LCD 通路
@@ -90,6 +88,8 @@ Flash 布局：
 
 JPEG 显示文件：
 
+- `src/jpeg_viewer.c`
+- `src/jpeg_viewer.h`
 - `src/jpg_display.c`
 - `src/jpg_display.h`
 - `src/TJpgDec/tjpgd.c`
@@ -111,6 +111,170 @@ JPEG 显示文件：
 - 文件大小相同但内容不同：逐块比较后重写
 - 文件内容一致：跳过写入，直接解码显示
 - 写入失败时会格式化 LittleFS 并重试一次
+
+`jpeg_viewer_show_file(const char *path)` 是当前图片接收完成后的统一显示入口。例如收到 `1.jpg` 后保存为 `/1.jpg` 并显示：
+
+```c
+jpeg_viewer_show_file("/1.jpg");
+```
+
+该接口要求 LittleFS 已经挂载，内部只负责打开指定 JPG 文件、TJpgDec 流式解码、调用 `LCD_addWindow()` 刷屏。
+
+## UART/BLE 图片传输
+
+当前默认通过 UART 模拟未来 BLE 串口透传。核心设计是 transport 抽象：
+
+```c
+typedef struct {
+    int (*init)(void);
+    int (*send)(const uint8_t *data, uint32_t len);
+    int (*recv)(uint8_t *data, uint32_t max_len);
+    int (*set_rx_callback)(void (*cb)(const uint8_t *data, uint32_t len));
+} transport_t;
+```
+
+当前初始化：
+
+```c
+image_update_init(&g_uart_transport);
+```
+
+未来 BLE ready 后切换为：
+
+```c
+image_update_init(&g_ble_transport);
+```
+
+模块边界：
+
+- `transport_if.h`：统一 transport 接口。
+- `transport_uart.c/h`：UART transport，封装 `gui_uart_read()` 和 `gui_uart_send()`。
+- `transport_ble.c/h`：BLE transport 占位，后续只在这里对接 BLE 透传。
+- `file_transfer.c/h`：START/DATA/END 协议解析、ACK/NACK、CRC、seq/offset 校验；不直接调用 UART。
+- `fs_image.c/h`：LittleFS 临时文件保存、CRC32 校验、rename。
+- `jpeg_viewer.c/h`：从 LittleFS 文件解码显示。
+- `app_image_update.c/h`：应用入口，连接 transport 和 file_transfer。
+
+文件策略：
+
+- 接收中：`/image_tmp.jpg`
+- 正式图：按 START 包里的文件名保存到根目录，例如 `1.jpg` -> `/1.jpg`，`2.jpg` -> `/2.jpg`。
+- 只有完整接收并且 CRC32 校验成功后，才执行删除同名旧文件和 rename。
+- 接收失败会删除 `/image_tmp.jpg`，不会破坏已存在的正式图片。
+- DATA 模式接收开始时会清理旧调试路径 `/img/1.jpg`，避免历史内置图片占用 64KB LittleFS 分区导致新图写入空间不足。
+- START 时会先检查 LittleFS 剩余空间。如果空间不足，MCU 返回 `STORAGE_FULL`，PC 脚本会提示是否格式化 LittleFS。
+
+协议字段全部使用小端格式。CRC16 使用 CRC-16/CCITT-FALSE，CRC32 使用标准 ZIP/以太网 CRC32。
+
+限制：
+
+- `FT_MAX_CHUNK_SIZE = 512`
+- 默认 PC 发送 chunk 为 240，用于模拟 BLE 透传小包。
+- `FS_IMAGE_MAX_FILE_SIZE = 56KB`，给 64KB LittleFS 分区预留元数据空间。
+
+## 串口发送 JPG 测试
+
+安装 Python 依赖：
+
+```sh
+python3 -m pip install pyserial
+```
+
+编译固件：
+
+```sh
+make -C projects/gui
+```
+
+macOS 示例：
+
+```sh
+python3 projects/gui/utilities/send_jpg_uart.py \
+  --port /dev/tty.usbserial-310 \
+  --baud 921600 \
+  --file test.jpg \
+  --chunk 240
+```
+
+Windows 示例：
+
+```sh
+python3 projects/gui/utilities/send_jpg_uart.py \
+  --port COM3 \
+  --baud 921600 \
+  --file test.jpg \
+  --chunk 240
+```
+
+可选参数：
+
+- `--timeout`：每包等待 ACK 的超时时间，默认 2 秒。
+- `--retry`：每包超时或 NACK 后的重试次数，默认 5 次。
+- `--inter-packet-delay`：包间延时，调试低速链路时可使用。
+- `--format-on-full`：空间不足时自动发送 FORMAT 命令格式化 LittleFS，然后重新开始传输。会清空 LittleFS 中已有图片，适合自动化测试。
+- `--no-format-on-full`：空间不足时直接停止传输，不进行交互提示，也不会格式化，适合需要保留已有图片的场景。
+
+空间不足时的三种用法：
+
+1. 默认交互模式：脚本收到 `STORAGE_FULL` 后询问是否格式化。
+
+   ```sh
+   python3 projects/gui/utilities/send_jpg_uart.py \
+     --port COM3 \
+     --baud 921600 \
+     --file 2.jpg \
+     --chunk 240
+   ```
+
+   提示如下，输入 `y` 或 `yes` 会格式化，直接回车或输入其他内容会停止传输：
+
+   ```text
+   MCU reports storage full. Format LittleFS and erase old images? [y/N]:
+   ```
+
+2. 自动格式化模式：空间不足时不询问，直接格式化并重传。
+
+   ```sh
+   python3 projects/gui/utilities/send_jpg_uart.py \
+     --port COM3 \
+     --baud 921600 \
+     --file 2.jpg \
+     --chunk 240 \
+     --format-on-full
+   ```
+
+3. 禁止格式化模式：空间不足时直接停止，保留板子里已有图片。
+
+   ```sh
+   python3 projects/gui/utilities/send_jpg_uart.py \
+     --port COM3 \
+     --baud 921600 \
+     --file 2.jpg \
+     --chunk 240 \
+     --no-format-on-full
+   ```
+
+发送流程：
+
+1. PC 读取 JPG 并计算 CRC32。
+2. 发送 START，等待 ACK。
+3. 按 chunk 分片发送 DATA，每包等待 ACK。
+4. 发送 END，等待最终 ACK。
+5. 如果 START 返回 `STORAGE_FULL`，脚本提示是否格式化；确认后发送 FORMAT 命令并重发 START。
+6. MCU 校验 `/image_tmp.jpg` 的 CRC32，成功后 rename 为按文件名生成的正式路径。
+7. MCU 调用 `jpeg_viewer_show_file()` 自动显示新收到的图片。
+
+## BLE 替换步骤
+
+BLE 硬件 ready 后，只需要实现 `transport_ble.c`：
+
+1. `transport_ble_init()` 初始化 BLE 串口透传服务。
+2. `transport_ble_send()` 发送 ACK/NACK 到手机 App。
+3. `transport_ble_recv()` 从 BLE RX ring buffer 取数据。
+4. 如 BLE SDK 是事件回调模型，可在 `transport_ble_set_rx_callback()` 中接入回调，再由本层缓存到 ring buffer。
+5. 在 `main.c` 中把 `image_update_init(&g_uart_transport)` 替换为 `image_update_init(&g_ble_transport)`。
+
+`file_transfer.c`、`fs_image.c`、`jpeg_viewer.c` 不需要改。
 
 ## 替换图片
 
@@ -143,7 +307,7 @@ JPEG 显示文件：
    bash aft_build_macos.sh
    ```
 
-设备启动后会自动把新的 `img_1_jpg[]` 同步到 LittleFS 的 `/img/1.jpg`，再解码显示。
+该内置图片流程主要用于 `GUI_UART_MODE_LOG` 调试模式。当前默认 `GUI_UART_MODE_DATA` 下，设备启动后等待 UART/BLE transport 下发 JPG，并按文件名保存和显示。
 
 ## UART0 模式开关
 
@@ -167,17 +331,8 @@ GUI 工程当前默认把 UART0 作为普通数据串口使用。串口引脚来
 
 两种模式：
 
-- `GUI_UART_MODE_DATA`：当前默认模式。`board_init()` 调用 `gui_uart_data_init()`，UART0 初始化为 8N1，RX FIFO 可读中断会把数据搬到 2048 字节软件环形缓冲区；`printf()` 被重定向为空函数，不会输出日志。
+- `GUI_UART_MODE_DATA`：当前默认模式。UART0 由 `transport_uart` 初始化为 8N1，RX FIFO 可读中断会把数据搬到 2048 字节软件环形缓冲区；`printf()`、`puts()`、`putchar()`、`fputc()` 被重定向为空函数，不会输出日志。
 - `GUI_UART_MODE_LOG`：日志模式。`board_init()` 调用 `console_init()`，UART0 专门用于日志打印，`printf()` 正常输出。
-
-当前 `src/main.c` 在 DATA 模式下内置了一个串口回环测试：
-
-```c
-uint32_t rx_len = gui_uart_read(uart_echo_buf, sizeof(uart_echo_buf));
-if (rx_len > 0U) {
-    (void)gui_uart_send(uart_echo_buf, rx_len);
-}
-```
 
 普通串口模式可用接口：
 
@@ -195,9 +350,17 @@ void gui_uart_clear_rx(void);
 
 - `src/main.c`：主流程入口。
 - `src/gui_uart.c/h`：UART0 日志/普通串口模式开关，普通串口中断接收和发送接口。
+- `src/transport_if.h`：UART/BLE 统一 transport 接口。
+- `src/transport_uart.c/h`：UART transport。
+- `src/transport_ble.c/h`：BLE transport 占位。
+- `src/file_transfer.c/h`：图片传输协议状态机、ACK/NACK、CRC 和分片校验。
+- `src/fs_image.c/h`：LittleFS 图片临时文件和正式文件管理。
+- `src/jpeg_viewer.c/h`：从 LittleFS 文件解码显示。
+- `src/app_image_update.c/h`：图片更新应用入口。
 - `src/ST77916.c/h`：LCD 初始化、窗口设置、RGB565 像素写入、背光控制。
 - `src/CST816.c/h`：触摸初始化、中断标志、坐标读取。
 - `src/lfs_port.c/h`：LittleFS 到 SPI Flash 的底层适配。
 - `src/jpg_display.c/h`：JPEG 写入 LittleFS、TJpgDec 解码、LCD 显示。
 - `utilities/jpg_to_c.py`：把 JPEG 原始字节转换为 C 数组。
+- `utilities/send_jpg_uart.py`：通过 UART 发送 JPG 的 PC/macOS 测试工具。
 - `Makefile`：macOS/xPack RISC-V GCC 构建脚本。

@@ -39,10 +39,9 @@ void board_init(void)
     console_init(&console);
 #elif GUI_UART_MODE == GUI_UART_MODE_DATA
     /*
-     * 普通串口模式：UART0 不再作为专用日志口使用，改为业务数据收发。
-     * 接收由 UART 中断搬运到软件环形缓冲区，业务代码调用 gui_uart_read() 读取。
+     * 普通串口模式：board_init 只做芯片初始化。
+     * UART0 由 transport_uart 在 image_update_init() 中初始化，便于未来切换 BLE transport。
      */
-    (void)gui_uart_data_init();
 #else
 #error "Unsupported GUI_UART_MODE"
 #endif

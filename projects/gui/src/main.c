@@ -17,6 +17,8 @@
 #include "CST816.h"
 #include "jpg_display.h"
 #include "gui_uart.h"
+#include "app_image_update.h"
+#include "transport_uart.h"
 
 int main(void)
 {
@@ -30,25 +32,23 @@ int main(void)
     /* 2. 初始化触摸：I2C + 复位 + 读 ID + INT 中断 */
     Touch_Init();
 
-    /* 3. JPEG 解码显示：挂载 LFS → 按需写入 jpg → 流式解码全屏显示 */
-    jpg_display_run();
-
-    /* 4. 主循环：DATA 模式做串口回环测试；LOG 模式保留触摸坐标打印 */
 #if GUI_UART_MODE == GUI_UART_MODE_DATA
-    uint8_t uart_echo_buf[128];
+    /* 3. DATA 模式：使用 UART transport 接收 JPG，保存到 LittleFS 后自动解码显示 */
+    (void)image_update_init(&g_uart_transport);
+#else
+    /* 3. LOG 模式：挂载 LFS → 按需写入内置 jpg → 流式解码全屏显示 */
+    jpg_display_run();
+#endif
+
+    /* 4. 主循环：DATA 模式跑图片传输协议；LOG 模式保留触摸坐标打印 */
+#if GUI_UART_MODE == GUI_UART_MODE_DATA
 #else
     cst816_data_t touch;
 #endif
 
     while (1) {
 #if GUI_UART_MODE == GUI_UART_MODE_DATA
-        /* 上位机下发的数据已经由中断放入环形缓冲区，这里读出后原样回发。 */
-        uint32_t rx_len = gui_uart_read(uart_echo_buf, sizeof(uart_echo_buf));
-
-        if (rx_len > 0U) {
-            (void)gui_uart_send(uart_echo_buf, rx_len);
-        }
-
+        image_update_poll();
         mdelay(1);
 #else
         if (Touch_Poll(&touch)) {
