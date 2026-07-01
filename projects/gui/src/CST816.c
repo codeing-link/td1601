@@ -186,31 +186,34 @@ void Touch_Init(void)
  * =========================================================================*/
 
 /*
- * 触摸数据布局（从寄存器 0x02 起读 5 字节）：
- *   byte0: 触点数
- *   byte1: bit[3:0] = X 高 4 位
- *   byte2: X 低 8 位
- *   byte3: bit[3:0] = Y 高 4 位
- *   byte4: Y 低 8 位
- *   => x = (byte1 & 0x0F) << 8 | byte2;  y 同理
+ * 触摸数据布局（从寄存器 0x01 起读 6 字节）：
+ *   byte0: 手势 ID，常见值：0x03 左滑，0x04 右滑
+ *   byte1: 触点数
+ *   byte2: bit[3:0] = X 高 4 位
+ *   byte3: X 低 8 位
+ *   byte4: bit[3:0] = Y 高 4 位
+ *   byte5: Y 低 8 位
+ *   => x = (byte2 & 0x0F) << 8 | byte3;  y 同理
  */
 static int cst816_read_point(cst816_data_t *out)
 {
-    uint8_t buf[5];
+    uint8_t buf[6];
 
-    if (cst816_read_reg(CST816_REG_DATA_START, buf, sizeof(buf)) != 0) {
+    if (cst816_read_reg(CST816_REG_GESTURE, buf, sizeof(buf)) != 0) {
         return -1;
     }
 
-    uint8_t num = buf[0];
+    out->gesture = buf[0];
+
+    uint8_t num = buf[1];
     if (num > CST816_POINT_NUM_MAX) {
         num = CST816_POINT_NUM_MAX;
     }
 
     out->points = num;
     if (num > 0) {
-        out->x = (uint16_t)(((buf[1] & 0x0F) << 8) | buf[2]);
-        out->y = (uint16_t)(((buf[3] & 0x0F) << 8) | buf[4]);
+        out->x = (uint16_t)(((buf[2] & 0x0F) << 8) | buf[3]);
+        out->y = (uint16_t)(((buf[4] & 0x0F) << 8) | buf[5]);
     } else {
         out->x = 0;
         out->y = 0;
@@ -237,6 +240,6 @@ bool Touch_Poll(cst816_data_t *out)
         return false;
     }
 
-    /* 仅当真有触点时上报 */
-    return (out->points > 0);
+    /* 左右滑有时只上报 gesture，触点数可能为 0，也需要交给上层处理 */
+    return (out->points > 0 || out->gesture != CST816_GESTURE_NONE);
 }

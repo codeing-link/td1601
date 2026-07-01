@@ -2,7 +2,7 @@
 
 /******************************************************************************
  * @file     main.c
- * @brief    GUI 主程序：初始化 ST77916 QSPI 屏 + CST816 触摸，主循环读坐标
+ * @brief    GUI 主程序：初始化 ST77916 QSPI 屏 + CST816 触摸，主循环处理图片更新和手势切换
  * @version  V1.0
  * @date     2026-06-17
  ******************************************************************************/
@@ -33,14 +33,14 @@ int main(void)
     Touch_Init();
 
 #if GUI_UART_MODE == GUI_UART_MODE_DATA
-    /* 3. DATA 模式：使用 UART transport 接收 JPG，保存到 LittleFS 后自动解码显示 */
+    /* 3. DATA 模式：挂载 LittleFS，显示上次图片，并使用 UART transport 接收新 JPG */
     (void)image_update_init(&g_uart_transport);
 #else
     /* 3. LOG 模式：挂载 LFS → 按需写入内置 jpg → 流式解码全屏显示 */
     jpg_display_run();
 #endif
 
-    /* 4. 主循环：DATA 模式跑图片传输协议；LOG 模式保留触摸坐标打印 */
+    /* 4. 主循环：DATA 模式跑图片传输协议和左右滑切图；LOG 模式保留触摸坐标打印 */
 #if GUI_UART_MODE == GUI_UART_MODE_DATA
 #else
     cst816_data_t touch;

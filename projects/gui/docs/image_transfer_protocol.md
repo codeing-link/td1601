@@ -209,7 +209,7 @@ Receiver 校验通过后：
 5. CRC32 正确则删除同名旧正式图片
 6. rename `/image_tmp.jpg` 为正式路径，例如 `/1.jpg`
 7. 返回 `ACK(file_id, seq=total_chunks)`
-8. 调用 `jpeg_viewer_show_file()` 显示新图
+8. 调用 `image_gallery_show_path()` 刷新图片列表、记录当前图片并显示新图
 
 如果任一步失败，Receiver 返回 NACK，并删除 `/image_tmp.jpg`。
 
@@ -365,10 +365,13 @@ fs_image_write()
         ↓
 fs_image_finish()
         ↓
+image_gallery_show_path(received_path)
+        ↓
 jpeg_viewer_show_file(received_path)
 ```
 
 `file_transfer.c` 不依赖 UART API，只依赖 `transport_t`。
+接收成功的新图片会写入 LittleFS 根目录，并记录到 `/.current_image`，下次上电时固件会优先显示这张图片。
 
 ## 9. Python 参考实现
 

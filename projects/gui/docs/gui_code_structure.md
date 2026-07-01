@@ -1,6 +1,6 @@
 # GUI 工程 C 文件结构说明
 
-本文档用于帮助开发者快速读懂 `projects/gui` 工程。当前工程的主要功能是：初始化 LCD 和触摸，默认通过 UART 接收 JPG 图片，保存到 LittleFS，校验成功后从文件系统读取 JPG 并解码显示。未来 BLE 接入后，只替换 transport 层，不重写图片接收和显示核心逻辑。
+本文档用于帮助开发者快速读懂 `projects/gui` 工程。当前工程的主要功能是：初始化 LCD 和触摸，启动后扫描 LittleFS 中已有 JPG 图片并显示上次停留的图片；默认通过 UART 接收 JPG 图片，保存到 LittleFS，校验成功后加入图片库并解码显示。存在多张图片时，用户可以通过左滑/右滑循环切换。未来 BLE 接入后，只替换 transport 层，不重写图片接收、文件保存、图片库和显示核心逻辑。
 
 ## 1. 推荐阅读顺序
 
@@ -13,10 +13,11 @@
 5. `src/transport_uart.c`
 6. `src/file_transfer.c`
 7. `src/fs_image.c`
-8. `src/jpeg_viewer.c`
-9. `src/ST77916.c`
-10. `src/CST816.c`
-11. `src/lfs_port.c`
+8. `src/image_gallery.c`
+9. `src/jpeg_viewer.c`
+10. `src/ST77916.c`
+11. `src/CST816.c`
+12. `src/lfs_port.c`
 
 如果只是开发手机 App，重点看：
 
@@ -61,6 +62,8 @@ while (1) {
     mdelay(1);
 }
 ```
+
+DATA 模式下，`image_update_init()` 会先挂载 LittleFS，再扫描根目录图片。如果有图片，会显示 `/.current_image` 记录的上次图片；如果记录无效，则显示排序后的第一张图片；如果没有图片，则清黑屏等待后续传输。
 
 LOG 模式主要用于调试，会恢复 `printf` 日志输出，并执行原来的内置 JPG 显示路径。
 
@@ -180,7 +183,8 @@ image_update_init(&g_ble_transport);
 - 作为图片更新功能的应用入口
 - 挂载 LittleFS
 - 初始化文件传输状态机
-- 在主循环中驱动 `file_transfer_poll()`
+- 上电扫描图片库并显示上次图片
+- 在主循环中驱动 `file_transfer_poll()` 和触摸手势切图
 
 接口：
 
@@ -194,6 +198,13 @@ void image_update_poll(void);
 - `main.c` 中调用 `image_update_init(&g_uart_transport)`
 - 主循环中调用 `image_update_poll()`
 
+运行逻辑：
+
+- `image_update_init()` 调用 `fs_image_mount()` 挂载文件系统。
+- 初始化 `file_transfer`。
+- 调用 `image_gallery_show_saved_or_first()`：有图显示上次图片，无图清黑屏。
+- `image_update_poll()` 先跑传输状态机，再读取 `Touch_Poll()`，将左右滑交给 `image_gallery_handle_touch()`。
+
 ## 6. 文件传输协议层
 
 ### `src/file_transfer.c` / `src/file_transfer.h`
@@ -205,7 +216,7 @@ void image_update_poll(void);
 - 校验 `file_id`、`seq`、`offset`、`len`
 - 发送 ACK/NACK
 - 调用 `fs_image` 写入临时文件
-- END 后触发文件 CRC32 校验和图片显示
+- END 后触发文件 CRC32 校验和图片库显示
 
 状态机：
 
@@ -224,7 +235,7 @@ ERROR
 - `WAIT_START`：等待 START 包
 - `RECV_DATA`：接收 DATA 包
 - `VERIFY_FILE`：END 后进行文件校验
-- `DECODE_DISPLAY`：校验成功后显示图片
+- `DECODE_DISPLAY`：校验成功后刷新图片库并显示图片
 
 重要限制：
 
@@ -240,6 +251,8 @@ ERROR
 - 所有收发都通过 `transport_t`
 - 协议字段全部按小端解析
 - 接收到的数据先进入临时文件，不直接覆盖正式图片
+
+传输完成后，`file_transfer.c` 调用 `image_gallery_show_path(fs_image_get_final_path())`，由图片库负责刷新列表、记录当前图片并显示。
 
 ## 7. LittleFS 图片文件层
 
@@ -294,7 +307,40 @@ const char *fs_image_get_final_path(void);
 
 该限制用于给 128KB LittleFS 分区预留元数据空间。
 
-## 8. JPEG 解码显示层
+## 8. 图片库和 JPEG 解码显示层
+
+### `src/image_gallery.c` / `src/image_gallery.h`
+
+职责：
+
+- 扫描 LittleFS 根目录下的 `.jpg/.jpeg` 图片。
+- 最多缓存 16 张图片路径，按文件名排序。
+- 上电读取 `/.current_image`，恢复上次实际显示的图片。
+- 没有图片时清黑屏，不显示默认图。
+- 左滑切换下一张，右滑切换上一张，列表首尾循环。
+- 每次显示成功后，把当前图片路径写入 `/.current_image`。
+
+关键接口：
+
+```c
+int image_gallery_show_saved_or_first(void);
+int image_gallery_show_path(const char *path);
+int image_gallery_next(void);
+int image_gallery_prev(void);
+void image_gallery_handle_touch(const cst816_data_t *touch);
+```
+
+路径策略：
+
+- 图片文件保存在 LittleFS 根目录，例如 `/1.jpg`、`/2.jpg`。
+- 当前图片记录保存在 `/.current_image`。
+- `/.current_image` 只保存路径文本，不保存图片数据。
+
+触摸策略：
+
+- `CST816_GESTURE_LEFT`：显示下一张。
+- `CST816_GESTURE_RIGHT`：显示上一张。
+- 只有 0 或 1 张图片时，左右滑不会触发重刷。
 
 ### `src/jpeg_viewer.c` / `src/jpeg_viewer.h`
 
@@ -310,10 +356,10 @@ const char *fs_image_get_final_path(void);
 int jpeg_viewer_show_file(const char *path);
 ```
 
-图片接收完成后的调用：
+单张图片显示调用：
 
 ```c
-jpeg_viewer_show_file(fs_image_get_final_path());
+jpeg_viewer_show_file("/1.jpg");
 ```
 
 设计特点：
@@ -321,6 +367,7 @@ jpeg_viewer_show_file(fs_image_get_final_path());
 - 不需要整帧 framebuffer
 - JPEG 数据从 LittleFS 流式读取
 - 解码输出块直接通过 `LCD_addWindow()` 显示
+- 不负责图片列表、左右滑切换和当前图片持久化
 
 ### `src/jpg_display.c` / `src/jpg_display.h`
 
@@ -333,7 +380,7 @@ jpeg_viewer_show_file(fs_image_get_final_path());
 当前用途：
 
 - 主要用于 LOG 模式或调试内置图片流程
-- DATA 模式下主链路使用 `jpeg_viewer_show_file(fs_image_get_final_path())`
+- DATA 模式下主链路使用 `image_gallery_show_path(fs_image_get_final_path())`
 
 ## 9. LCD 驱动层
 
@@ -369,16 +416,16 @@ JPEG 显示时，`jpeg_viewer.c` 的输出回调最终调用 `LCD_addWindow()`�
 - I2C 读写寄存器
 - 配置 RST/INT GPIO
 - INT 中断回调只置位标志
-- 主循环通过 `Touch_Poll()` 读取坐标
+- 主循环通过 `Touch_Poll()` 读取坐标和手势
 
 主要接口：
 
 ```c
 void Touch_Init(void);
-int Touch_Poll(cst816_data_t *out);
+bool Touch_Poll(cst816_data_t *out);
 ```
 
-DATA 模式当前主循环重点是图片接收，触摸初始化仍保留。
+DATA 模式下，`Touch_Poll()` 返回的左右滑手势会传给 `image_gallery_handle_touch()`，用于切换 LittleFS 中已有图片。CST816 有时只上报 gesture 而触点数为 0，因此驱动会在存在有效 gesture 时也返回事件。
 
 ## 11. LittleFS 移植层
 
@@ -483,6 +530,7 @@ src/transport_uart.c
 src/transport_ble.c
 src/file_transfer.c
 src/fs_image.c
+src/image_gallery.c
 src/jpeg_viewer.c
 src/app_image_update.c
 ```
@@ -534,8 +582,26 @@ DATA 模式下为了避免日志污染协议，链接参数包含：
 
 1. JPG 是否为 TJpgDec 支持的格式
 2. 图片尺寸是否适配当前 LCD
-3. `jpeg_viewer_show_file(fs_image_get_final_path())` 是否返回错误
+3. `image_gallery_show_path(fs_image_get_final_path())` 是否返回错误
 4. LCD 初始化是否成功
+
+### 上电没有显示图片
+
+优先检查：
+
+1. LittleFS 根目录是否真的存在 `.jpg/.jpeg` 文件
+2. 图片是否放在根目录，当前图片库不会扫描 `/img` 子目录
+3. `/.current_image` 记录的路径是否已经被删除；删除后应自动回退到第一张
+4. `jpeg_viewer_show_file()` 是否返回解码错误
+
+### 左右滑不能切图
+
+优先检查：
+
+1. LittleFS 中是否至少有 2 张 `.jpg/.jpeg` 图片
+2. `Touch_Init()` 是否成功，CST816 INT 是否有触发
+3. CST816 手势值是否为 `0x03` 左滑或 `0x04` 右滑
+4. `image_update_poll()` 是否在主循环中持续调用
 
 ## 16. 总体调用关系
 
@@ -548,15 +614,20 @@ main.c
        ├─ fs_image.c
        │    └─ lfs_port.c
        │         └─ littlefs/lfs.c
+       ├─ image_gallery.c
+       │    ├─ jpeg_viewer.c
+       │    ├─ lfs_port.c
+       │    └─ ST77916.c
        └─ file_transfer.c
             ├─ transport_if.h
             ├─ transport_uart.c
             │    └─ gui_uart.c
             ├─ fs_image.c
-            └─ jpeg_viewer.c
-                 ├─ TJpgDec/tjpgd.c
-                 ├─ lfs_port.c
-                 └─ ST77916.c
+            └─ image_gallery.c
+                 └─ jpeg_viewer.c
+                      ├─ TJpgDec/tjpgd.c
+                      ├─ lfs_port.c
+                      └─ ST77916.c
 ```
 
 这个结构的核心目的是分层：
@@ -564,5 +635,6 @@ main.c
 - transport 层只解决字节怎么收发
 - file_transfer 层只解决协议和可靠传输
 - fs_image 层只解决文件安全落盘
+- image_gallery 层只解决图片列表、启动恢复和手势切换
 - jpeg_viewer 层只解决图片显示
 - LCD/Touch/LittleFS port 层只解决硬件和底层适配

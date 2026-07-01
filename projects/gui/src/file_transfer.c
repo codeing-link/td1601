@@ -13,7 +13,7 @@
 #include <string.h>
 #include "file_transfer.h"
 #include "fs_image.h"
-#include "jpeg_viewer.h"
+#include "image_gallery.h"
 
 #define FT_START_FIXED_LEN      19U
 #define FT_DATA_FIXED_LEN       18U
@@ -304,7 +304,7 @@ static void ft_handle_end(const uint8_t *pkt, uint32_t len)
      */
     ft_send_ack(file_id, total_chunks);
     s_ft.state = FT_STATE_DECODE_DISPLAY;
-    (void)jpeg_viewer_show_file(fs_image_get_final_path());
+    (void)image_gallery_show_path(fs_image_get_final_path());
     s_ft.state = FT_STATE_WAIT_START;
 }
 

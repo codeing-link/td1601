@@ -117,6 +117,7 @@ PROJ_SRCS := \
 	src/file_transfer.c \
 	src/fs_image.c \
 	src/jpeg_viewer.c \
+	src/image_gallery.c \
 	src/app_image_update.c \
 	src/gpio_toggle.c \
 	src/ST77916.c \
@@ -140,6 +141,7 @@ PROJ_OBJS := \
 	$(OBJ)/src_file_transfer.o \
 	$(OBJ)/src_fs_image.o \
 	$(OBJ)/src_jpeg_viewer.o \
+	$(OBJ)/src_image_gallery.o \
 	$(OBJ)/src_app_image_update.o \
 	$(OBJ)/src_gpio_toggle.o \
 	$(OBJ)/src_ST77916.o \
@@ -340,6 +342,10 @@ $(OBJ)/src_fs_image.o: src/fs_image.c
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 
 $(OBJ)/src_jpeg_viewer.o: src/jpeg_viewer.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/src_image_gallery.o: src/image_gallery.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) -MF $(@:.o=.d) -o $@ $<
 

@@ -54,10 +54,17 @@ extern "C" {
  * CST816 寄存器
  * =========================================================================*/
 #define CST816_REG_DATA_START        (0x02)         /* 触点数据起始寄存器 */
+#define CST816_REG_GESTURE           (0x01)         /* 手势 ID 寄存器 */
 #define CST816_REG_CHIP_ID           (0xA7)         /* 芯片 ID 寄存器 */
 #define CST816_REG_AUTOSLEEP         (0xFE)         /* 自动休眠控制寄存器 */
 
 #define CST816_POINT_NUM_MAX         (1)            /* 最大触点数 */
+
+#define CST816_GESTURE_NONE          (0x00)
+#define CST816_GESTURE_UP            (0x01)
+#define CST816_GESTURE_DOWN          (0x02)
+#define CST816_GESTURE_LEFT          (0x03)
+#define CST816_GESTURE_RIGHT         (0x04)
 
 /* ===========================================================================
  * 触摸数据（精简本地结构，替代 esp_lcd_touch_handle_t）
@@ -66,6 +73,7 @@ typedef struct {
     uint16_t x;            /* X 坐标 */
     uint16_t y;            /* Y 坐标 */
     uint8_t  points;       /* 当前触点数（0 表示无触摸） */
+    uint8_t  gesture;      /* CST816 手势 ID，左/右滑用于切换图片 */
 } cst816_data_t;
 
 /* ===========================================================================
