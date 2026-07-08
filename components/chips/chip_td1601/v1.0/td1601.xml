@@ -1,0 +1,40 @@
+<Board name="td1601_evb" arch="riscv" mctsimv="2.0">
+	<cpu_info cpu="e906fd" endian="little" abi="abiv2" />
+	<dyndev shm="on">
+		<dev name="mct_gpio" filename="mct_gpio" addr="0x60030070" type="GPIO" extra="" irq="" />
+		<dev name="mct_uart" filename="mct_uart" addr="0x50010000" type="UART" extra="" irq="6" />
+		<dev name="mct_timer" filename="mct_timer" addr="0x60000414" type="TIMER" extra="" irq="29" />
+		<dev name="mct_wdt" filename="mct_wdt" addr="0x50008000" type="WDT" extra="" irq="5" />
+		<dev name="mct_i2c" filename="mct_i2c" addr="0x50014000" type="I2C" extra="" irq="9" />
+		<dev name="mct_spi" filename="mct_spi" addr="0x5000c000" type="SPI" extra="" irq="12" />
+		<dev name="mct_dmacmct_dmac" filename="" addr="0x40001000" type="" extra="" irq="17" />
+		<dev name="mct_wj_dmac" filename="mct_wj_dmac" addr="0x80000000" type="WJ_DMAC" extra="" irq="17" />
+		<dev name="mct_wj_etb" filename="mct_wj_etb" addr="0x60024000" type="ETB" extra="" irq="" />
+		<dev name="mct_qspi" filename="mct_qspi" addr="0x5002c000" type="QSPI" extra="" irq="25" />
+		<dev name="mct_adc" filename="mct_adc" addr="0x60020000" type="ADC" extra="" irq="" />
+		<dev name="mct_pwm" filename="mct_pwm" addr="0x6001c000" type="PWM" extra="" irq="9" />
+	</dyndev>
+	<memory>
+		<mem name="smart_inst_mem" addr="0x0" size="0x01000000" attr="MEM_RAM" />
+		<mem name="smart_data_mem" addr="0x20000000" size="0x01000000" attr="MEM_RAM" />
+		<mem name="smart_outchip_mem" addr="0x50000000" size="0x00800000" attr="MEM_RAM" />
+		<mem name="smart_sys_mem" addr="0x60000000" size="0x01000000" attr="MEM_RAM" />
+	</memory>
+	<cpu_prop>
+		<cpu name="pctrace" value="off"> on/off </cpu>
+		<cpu name="elrw" value="on"> on/off </cpu>
+		<cpu name="mem_prot" value="mpu"> no/mmu/mpu </cpu>
+		<cpu name="unaligned_access" value="off"> on/off </cpu>
+	</cpu_prop>
+	<Description>
+		This file is used for dynamic configuration
+		<AutoDescription>
+            CPU Type: ck805ef Little Endian
+            Memory Sections:
+                smart_inst_mem, Start: 0x0, Length: 0x1000000
+                smart_data_mem, Start: 0x20000000, Length: 0x40000
+                smart_outchip_mem, Start: 0x50000000, Length: 0x800000
+                smart_sys_mem, Start: 0x60000000, Length: 0x1000000
+        </AutoDescription>
+	</Description>
+</Board>

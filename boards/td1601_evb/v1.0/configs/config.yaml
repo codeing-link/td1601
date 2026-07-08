@@ -1,0 +1,20 @@
+mtb_version: 4
+chip: td1601
+
+diff:
+  digest_type: SHA1
+  signature_type: RSA1024
+  fota_version: 0
+  ram_buf: 50      #DEC     KB   ( max ram need)
+  flash_buf: 16     #DEC     KB   ( buffer size)
+  flash_sector: 4096 #DEC     byte ( flash sector)
+  diff_mode: 010    #BIN
+  double_control: 1
+flash:
+  base_address: 0x18000000 #存储基地址，比如flash的基地址
+  sector: 4096       # Bytes
+  size: 2097152 #2MB $(sector count) * sector
+
+partitions:
+  - { name: prim,   address: 0x18008000, size: 0x178000, verify: true, update: DIFF}
+  - { name: boot,   address: 0x18000000, size: 0x8000 }

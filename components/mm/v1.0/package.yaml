@@ -1,0 +1,32 @@
+name: mm
+version: V1.0.0
+description: mm.
+tag: 核心模块
+keywords:                                      # 多标签
+  - base
+license: Apache license v2.0                   # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+
+hidden: true
+
+type: common
+yoc_version:
+  - v7.2
+  - v7.3
+
+depends:                                       # 该组件依赖其他的组件
+
+build_config:
+  include:
+    - include
+
+  cflag: -Os
+  cxxflag: -Os
+
+
+source_file:
+  - src/*.c
+
+install:
+  - dest: include/
+    source:
+      - "include/*.h"
