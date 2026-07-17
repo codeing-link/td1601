@@ -1,0 +1,41 @@
+name: lierda
+version: V1.0.0
+description: TD1601 EVB UART0 console logging and UART1 interrupt driven data transceiver
+type: solution
+yoc_version: V1.0.0
+
+depends:
+  - mm: V1.0.0
+  - csi: V1.0.0
+  - console: V1.0.0
+  - minilibc: V1.0.0
+  - td1601_evb: V1.0.0
+  - chip_td1601: V1.0.0
+
+solution:
+  board_name: td1601_evb
+
+build_config:
+  cflag: '-Os -g'
+  cxxflag: '-Os -g'
+  ldflag: >
+    -nostartfiles -Wl,--gc-sections -lm -Wl,-zmax-page-size=1024
+  include:
+    - include
+    - include/sys
+    - src
+  libs:
+    - m
+
+source_file:
+  - "src/*.c"
+  - "./*.c"
+
+def_config:
+  CONFIG_KERNEL_NONE: 1
+  CONFIG_ARCH_INTERRUPTSTACK: 16384
+  CONFIG_DEBUG_MODE: 0
+  CONFIG_XIP: 1
+  CONFIG_CHIP_TD1601: 1
+  CONFIG_SUPPORT_TSPEND: 1
+  CONFIG_CPU_E906FD: 1
