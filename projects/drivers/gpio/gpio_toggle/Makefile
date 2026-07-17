@@ -14,87 +14,87 @@ ARCH_FLAGS := -march=rv32imafdc_zicsr_xtheadcmo -mabi=ilp32d
 COMPAT := -include generated/td1601_xpack_compat.h
 CFLAGS := $(ARCH_FLAGS) -Wall -std=gnu99 -ffunction-sections -fdata-sections -MMD -MP $(COMPAT) -Os -g
 ASFLAGS := $(ARCH_FLAGS) -x assembler-with-cpp -ffunction-sections -fdata-sections -MMD -MP $(COMPAT)
-INCLUDES := -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/projects/drivers/gpio/gpio_toggle/include -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/projects/drivers/gpio/gpio_toggle/include/sys -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/include -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/boards/td1601_evb/v1.0/include -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/include -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/csi/v1.0/include -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/csi/v1.0/include/core -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/console/v1.0 -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/include -I/Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components
+INCLUDES := -Iinclude -Iinclude/sys -I../../../../components/chips/chip_td1601/v1.0/include -I../../../../components/chips/chip_td1601/v1.0/sys -I../../../../boards/td1601_evb/v1.0/include -I../../../../components/mm/v1.0/include -I../../../../components/csi/v1.0/include -I../../../../components/csi/v1.0/include/core -I../../../../components/console/v1.0 -I../../../../components/minilibc/v1.0/include -I../../../../components
 DEFINES := -DCONFIG_KERNEL_NONE=1 -DCONFIG_ARCH_INTERRUPTSTACK=4096 -DCONFIG_DEBUG=1 -DCONFIG_DEBUG_MODE=0 -DCONFIG_XIP=1 -DCONFIG_BENCHMARK=1 -DCONFIG_BENCHMARK_COREMARK=1 -DCONFIG_BENCHMARK_DHRY=1 -DCONFIG_CHIP_TD1601=1 -DCONFIG_SUPPORT_TSPEND=1 -DCONFIG_CPU_E906FD=1
 CFLAGS += $(INCLUDES) $(DEFINES)
 ASFLAGS += $(INCLUDES) $(DEFINES)
-LDSCRIPT := /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/boards/td1601_evb/v1.0/gcc_flash.ld
+LDSCRIPT := ../../../../boards/td1601_evb/v1.0/gcc_flash.ld
 LDFLAGS := -nostartfiles --specs=nano.specs -Wl,--gc-sections -T$(LDSCRIPT) $(ARCH_FLAGS) -Wl,-zmax-page-size=1024 -Wl,-Map=$(LST)/$(PROJECT).map -nostartfiles -Wl,--gc-sections -lm  -Wl,-zmax-page-size=1024
 
 OBJS := \
-  $(OBJ)/gpio_toggle_board_init_c.o \
-  $(OBJ)/gpio_toggle_example_gpio_toggle_c.o \
-  $(OBJ)/gpio_toggle_chip_config_c.o \
-  $(OBJ)/chip_td1601_adc_c.o \
-  $(OBJ)/chip_td1601_dma_c.o \
-  $(OBJ)/chip_td1601_edma_c.o \
-  $(OBJ)/chip_td1601_efuse_c.o \
-  $(OBJ)/chip_td1601_etb_c.o \
-  $(OBJ)/chip_td1601_gpio_c.o \
-  $(OBJ)/chip_td1601_iic_c.o \
-  $(OBJ)/chip_td1601_irq_port_c.o \
-  $(OBJ)/chip_td1601_ospi_c.o \
-  $(OBJ)/chip_td1601_pinmux_c.o \
-  $(OBJ)/chip_td1601_power_manager_c.o \
-  $(OBJ)/chip_td1601_pwm_c.o \
-  $(OBJ)/chip_td1601_qspi_c.o \
-  $(OBJ)/chip_td1601_qspiflash_ops_c.o \
-  $(OBJ)/chip_td1601_rtc_c.o \
-  $(OBJ)/chip_td1601_rtc_alg_c.o \
-  $(OBJ)/chip_td1601_spi_c.o \
-  $(OBJ)/chip_td1601_spiflash_c.o \
-  $(OBJ)/chip_td1601_spiflash_ops_c.o \
-  $(OBJ)/chip_td1601_spiflash_vendor_c.o \
-  $(OBJ)/chip_td1601_tdm_c.o \
-  $(OBJ)/chip_td1601_timer_c.o \
-  $(OBJ)/chip_td1601_uart_c.o \
-  $(OBJ)/chip_td1601_wdt_c.o \
-  $(OBJ)/chip_td1601_wj_pmu_td1601_c.o \
-  $(OBJ)/chip_td1601_cd_qspi_ll_c.o \
-  $(OBJ)/chip_td1601_dw_iic_ll_c.o \
-  $(OBJ)/chip_td1601_dw_ospi_ll_c.o \
-  $(OBJ)/chip_td1601_dw_spi_ll_c.o \
-  $(OBJ)/chip_td1601_dw_uart_ll_c.o \
-  $(OBJ)/chip_td1601_wj_adc_ll_c.o \
-  $(OBJ)/chip_td1601_wj_dma_ll_c.o \
-  $(OBJ)/chip_td1601_wj_efuse_ll_c.o \
-  $(OBJ)/chip_td1601_wj_etb_ll_c.o \
-  $(OBJ)/chip_td1601_wj_rtc_ll_c.o \
-  $(OBJ)/chip_td1601_cache_c.o \
-  $(OBJ)/chip_td1601_clk_c.o \
-  $(OBJ)/chip_td1601_devices_c.o \
-  $(OBJ)/chip_td1601_irq_c.o \
-  $(OBJ)/chip_td1601_power_manage_c.o \
-  $(OBJ)/chip_td1601_pre_main_c.o \
-  $(OBJ)/chip_td1601_reboot_c.o \
-  $(OBJ)/chip_td1601_sys_clk_c.o \
-  $(OBJ)/chip_td1601_system_c.o \
-  $(OBJ)/chip_td1601_target_get_c.o \
-  $(OBJ)/chip_td1601_tick_c.o \
-  $(OBJ)/chip_td1601_trap_c_c.o \
-  $(OBJ)/chip_td1601_weak_c.o \
-  $(OBJ)/chip_td1601_lpm_arch_reg_save_S.o \
-  $(OBJ)/chip_td1601_startup_S.o \
-  $(OBJ)/chip_td1601_vectors_S.o \
-  $(OBJ)/mm_dq_addlast_c.o \
-  $(OBJ)/mm_dq_rem_c.o \
-  $(OBJ)/mm_lib_mallinfo_c.o \
-  $(OBJ)/mm_mm_addfreechunk_c.o \
-  $(OBJ)/mm_mm_free_c.o \
-  $(OBJ)/mm_mm_initialize_c.o \
-  $(OBJ)/mm_mm_leak_c.o \
-  $(OBJ)/mm_mm_mallinfo_c.o \
-  $(OBJ)/mm_mm_malloc_c.o \
-  $(OBJ)/mm_mm_size2ndx_c.o \
-  $(OBJ)/csi_csi_ringbuffer_c.o \
-  $(OBJ)/console_sys_console_c.o \
-  $(OBJ)/minilibc__init_c.o \
-  $(OBJ)/minilibc_clock_gettime_c.o \
-  $(OBJ)/minilibc_malloc_c.o \
-  $(OBJ)/minilibc_minilibc_port_c.o \
-  $(OBJ)/minilibc_printf_c.o \
-  $(OBJ)/minilibc_reboot_c.o \
-  $(OBJ)/minilibc_syslog_c.o
+  $(OBJ)/gpio_toggle_board_init.o \
+  $(OBJ)/gpio_toggle_example_gpio_toggle.o \
+  $(OBJ)/gpio_toggle_chip_config.o \
+  $(OBJ)/chip_td1601_adc.o \
+  $(OBJ)/chip_td1601_dma.o \
+  $(OBJ)/chip_td1601_edma.o \
+  $(OBJ)/chip_td1601_efuse.o \
+  $(OBJ)/chip_td1601_etb.o \
+  $(OBJ)/chip_td1601_gpio.o \
+  $(OBJ)/chip_td1601_iic.o \
+  $(OBJ)/chip_td1601_irq_port.o \
+  $(OBJ)/chip_td1601_ospi.o \
+  $(OBJ)/chip_td1601_pinmux.o \
+  $(OBJ)/chip_td1601_power_manager.o \
+  $(OBJ)/chip_td1601_pwm.o \
+  $(OBJ)/chip_td1601_qspi.o \
+  $(OBJ)/chip_td1601_qspiflash_ops.o \
+  $(OBJ)/chip_td1601_rtc.o \
+  $(OBJ)/chip_td1601_rtc_alg.o \
+  $(OBJ)/chip_td1601_spi.o \
+  $(OBJ)/chip_td1601_spiflash.o \
+  $(OBJ)/chip_td1601_spiflash_ops.o \
+  $(OBJ)/chip_td1601_spiflash_vendor.o \
+  $(OBJ)/chip_td1601_tdm.o \
+  $(OBJ)/chip_td1601_timer.o \
+  $(OBJ)/chip_td1601_uart.o \
+  $(OBJ)/chip_td1601_wdt.o \
+  $(OBJ)/chip_td1601_wj_pmu_td1601.o \
+  $(OBJ)/chip_td1601_cd_qspi_ll.o \
+  $(OBJ)/chip_td1601_dw_iic_ll.o \
+  $(OBJ)/chip_td1601_dw_ospi_ll.o \
+  $(OBJ)/chip_td1601_dw_spi_ll.o \
+  $(OBJ)/chip_td1601_dw_uart_ll.o \
+  $(OBJ)/chip_td1601_wj_adc_ll.o \
+  $(OBJ)/chip_td1601_wj_dma_ll.o \
+  $(OBJ)/chip_td1601_wj_efuse_ll.o \
+  $(OBJ)/chip_td1601_wj_etb_ll.o \
+  $(OBJ)/chip_td1601_wj_rtc_ll.o \
+  $(OBJ)/chip_td1601_cache.o \
+  $(OBJ)/chip_td1601_clk.o \
+  $(OBJ)/chip_td1601_devices.o \
+  $(OBJ)/chip_td1601_irq.o \
+  $(OBJ)/chip_td1601_power_manage.o \
+  $(OBJ)/chip_td1601_pre_main.o \
+  $(OBJ)/chip_td1601_reboot.o \
+  $(OBJ)/chip_td1601_sys_clk.o \
+  $(OBJ)/chip_td1601_system.o \
+  $(OBJ)/chip_td1601_target_get.o \
+  $(OBJ)/chip_td1601_tick.o \
+  $(OBJ)/chip_td1601_trap_c.o \
+  $(OBJ)/chip_td1601_weak.o \
+  $(OBJ)/chip_td1601_lpm_arch_reg_save.o \
+  $(OBJ)/chip_td1601_startup.o \
+  $(OBJ)/chip_td1601_vectors.o \
+  $(OBJ)/mm_dq_addlast.o \
+  $(OBJ)/mm_dq_rem.o \
+  $(OBJ)/mm_lib_mallinfo.o \
+  $(OBJ)/mm_mm_addfreechunk.o \
+  $(OBJ)/mm_mm_free.o \
+  $(OBJ)/mm_mm_initialize.o \
+  $(OBJ)/mm_mm_leak.o \
+  $(OBJ)/mm_mm_mallinfo.o \
+  $(OBJ)/mm_mm_malloc.o \
+  $(OBJ)/mm_mm_size2ndx.o \
+  $(OBJ)/csi_csi_ringbuffer.o \
+  $(OBJ)/console_sys_console.o \
+  $(OBJ)/minilibc__init.o \
+  $(OBJ)/minilibc_clock_gettime.o \
+  $(OBJ)/minilibc_malloc.o \
+  $(OBJ)/minilibc_minilibc_port.o \
+  $(OBJ)/minilibc_printf.o \
+  $(OBJ)/minilibc_reboot.o \
+  $(OBJ)/minilibc_syslog.o
 DEPS := $(OBJS:.o=.d)
 ELF := $(OBJ)/$(PROJECT).elf
 BIN := $(OBJ)/$(PROJECT).bin
@@ -102,295 +102,295 @@ IHEX := $(OBJ)/$(PROJECT).ihex
 .PHONY: all clean size
 all: $(BIN) $(IHEX) size
 
-$(OBJ)/gpio_toggle_board_init_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/projects/drivers/gpio/gpio_toggle/src/board_init.c
+$(OBJ)/gpio_toggle_board_init.o: src/board_init.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/gpio_toggle_example_gpio_toggle_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/projects/drivers/gpio/gpio_toggle/src/example_gpio_toggle.c
+$(OBJ)/gpio_toggle_example_gpio_toggle.o: src/example_gpio_toggle.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/gpio_toggle_chip_config_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/projects/drivers/gpio/gpio_toggle/chip_config.c
+$(OBJ)/gpio_toggle_chip_config.o: chip_config.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_adc_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/adc.c
+$(OBJ)/chip_td1601_adc.o: ../../../../components/chips/chip_td1601/v1.0/drivers/adc.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_dma_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/dma.c
+$(OBJ)/chip_td1601_dma.o: ../../../../components/chips/chip_td1601/v1.0/drivers/dma.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_edma_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/edma.c
+$(OBJ)/chip_td1601_edma.o: ../../../../components/chips/chip_td1601/v1.0/drivers/edma.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_efuse_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/efuse.c
+$(OBJ)/chip_td1601_efuse.o: ../../../../components/chips/chip_td1601/v1.0/drivers/efuse.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_etb_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/etb.c
+$(OBJ)/chip_td1601_etb.o: ../../../../components/chips/chip_td1601/v1.0/drivers/etb.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_gpio_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/gpio.c
+$(OBJ)/chip_td1601_gpio.o: ../../../../components/chips/chip_td1601/v1.0/drivers/gpio.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_iic_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/iic.c
+$(OBJ)/chip_td1601_iic.o: ../../../../components/chips/chip_td1601/v1.0/drivers/iic.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_irq_port_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/irq_port.c
+$(OBJ)/chip_td1601_irq_port.o: ../../../../components/chips/chip_td1601/v1.0/drivers/irq_port.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_ospi_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ospi.c
+$(OBJ)/chip_td1601_ospi.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ospi.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_pinmux_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/pinmux.c
+$(OBJ)/chip_td1601_pinmux.o: ../../../../components/chips/chip_td1601/v1.0/drivers/pinmux.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_power_manager_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/power_manager.c
+$(OBJ)/chip_td1601_power_manager.o: ../../../../components/chips/chip_td1601/v1.0/drivers/power_manager.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_pwm_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/pwm.c
+$(OBJ)/chip_td1601_pwm.o: ../../../../components/chips/chip_td1601/v1.0/drivers/pwm.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_qspi_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/qspi.c
+$(OBJ)/chip_td1601_qspi.o: ../../../../components/chips/chip_td1601/v1.0/drivers/qspi.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_qspiflash_ops_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/qspiflash_ops.c
+$(OBJ)/chip_td1601_qspiflash_ops.o: ../../../../components/chips/chip_td1601/v1.0/drivers/qspiflash_ops.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_rtc_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/rtc.c
+$(OBJ)/chip_td1601_rtc.o: ../../../../components/chips/chip_td1601/v1.0/drivers/rtc.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_rtc_alg_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/rtc_alg.c
+$(OBJ)/chip_td1601_rtc_alg.o: ../../../../components/chips/chip_td1601/v1.0/drivers/rtc_alg.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_spi_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/spi.c
+$(OBJ)/chip_td1601_spi.o: ../../../../components/chips/chip_td1601/v1.0/drivers/spi.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_spiflash_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/spiflash.c
+$(OBJ)/chip_td1601_spiflash.o: ../../../../components/chips/chip_td1601/v1.0/drivers/spiflash.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_spiflash_ops_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/spiflash_ops.c
+$(OBJ)/chip_td1601_spiflash_ops.o: ../../../../components/chips/chip_td1601/v1.0/drivers/spiflash_ops.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_spiflash_vendor_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/spiflash_vendor.c
+$(OBJ)/chip_td1601_spiflash_vendor.o: ../../../../components/chips/chip_td1601/v1.0/drivers/spiflash_vendor.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_tdm_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/tdm.c
+$(OBJ)/chip_td1601_tdm.o: ../../../../components/chips/chip_td1601/v1.0/drivers/tdm.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_timer_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/timer.c
+$(OBJ)/chip_td1601_timer.o: ../../../../components/chips/chip_td1601/v1.0/drivers/timer.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_uart_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/uart.c
+$(OBJ)/chip_td1601_uart.o: ../../../../components/chips/chip_td1601/v1.0/drivers/uart.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_wdt_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/wdt.c
+$(OBJ)/chip_td1601_wdt.o: ../../../../components/chips/chip_td1601/v1.0/drivers/wdt.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_wj_pmu_td1601_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/wj_pmu_td1601.c
+$(OBJ)/chip_td1601_wj_pmu_td1601.o: ../../../../components/chips/chip_td1601/v1.0/drivers/wj_pmu_td1601.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_cd_qspi_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/cd_qspi_ll.c
+$(OBJ)/chip_td1601_cd_qspi_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/cd_qspi_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_dw_iic_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/dw_iic_ll.c
+$(OBJ)/chip_td1601_dw_iic_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/dw_iic_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_dw_ospi_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/dw_ospi_ll.c
+$(OBJ)/chip_td1601_dw_ospi_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/dw_ospi_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_dw_spi_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/dw_spi_ll.c
+$(OBJ)/chip_td1601_dw_spi_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/dw_spi_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_dw_uart_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/dw_uart_ll.c
+$(OBJ)/chip_td1601_dw_uart_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/dw_uart_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_wj_adc_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/wj_adc_ll.c
+$(OBJ)/chip_td1601_wj_adc_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/wj_adc_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_wj_dma_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/wj_dma_ll.c
+$(OBJ)/chip_td1601_wj_dma_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/wj_dma_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_wj_efuse_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/wj_efuse_ll.c
+$(OBJ)/chip_td1601_wj_efuse_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/wj_efuse_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_wj_etb_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/wj_etb_ll.c
+$(OBJ)/chip_td1601_wj_etb_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/wj_etb_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_wj_rtc_ll_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/drivers/ll/wj_rtc_ll.c
+$(OBJ)/chip_td1601_wj_rtc_ll.o: ../../../../components/chips/chip_td1601/v1.0/drivers/ll/wj_rtc_ll.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_cache_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/cache.c
+$(OBJ)/chip_td1601_cache.o: ../../../../components/chips/chip_td1601/v1.0/sys/cache.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_clk_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/clk.c
+$(OBJ)/chip_td1601_clk.o: ../../../../components/chips/chip_td1601/v1.0/sys/clk.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_devices_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/devices.c
+$(OBJ)/chip_td1601_devices.o: ../../../../components/chips/chip_td1601/v1.0/sys/devices.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_irq_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/irq.c
+$(OBJ)/chip_td1601_irq.o: ../../../../components/chips/chip_td1601/v1.0/sys/irq.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_power_manage_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/power_manage.c
+$(OBJ)/chip_td1601_power_manage.o: ../../../../components/chips/chip_td1601/v1.0/sys/power_manage.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_pre_main_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/pre_main.c
+$(OBJ)/chip_td1601_pre_main.o: ../../../../components/chips/chip_td1601/v1.0/sys/pre_main.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_reboot_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/reboot.c
+$(OBJ)/chip_td1601_reboot.o: ../../../../components/chips/chip_td1601/v1.0/sys/reboot.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_sys_clk_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/sys_clk.c
+$(OBJ)/chip_td1601_sys_clk.o: ../../../../components/chips/chip_td1601/v1.0/sys/sys_clk.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_system_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/system.c
+$(OBJ)/chip_td1601_system.o: ../../../../components/chips/chip_td1601/v1.0/sys/system.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_target_get_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/target_get.c
+$(OBJ)/chip_td1601_target_get.o: ../../../../components/chips/chip_td1601/v1.0/sys/target_get.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_tick_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/tick.c
+$(OBJ)/chip_td1601_tick.o: ../../../../components/chips/chip_td1601/v1.0/sys/tick.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_trap_c_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/trap_c.c
+$(OBJ)/chip_td1601_trap_c.o: ../../../../components/chips/chip_td1601/v1.0/sys/trap_c.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_weak_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/weak.c
+$(OBJ)/chip_td1601_weak.o: ../../../../components/chips/chip_td1601/v1.0/sys/weak.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_lpm_arch_reg_save_S.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/lpm_arch_reg_save.S
-	@mkdir -p $(dir $@)
-	$(CC) -c $(ASFLAGS) -MF $(@:.o=.d) -o $@ $<
-
-$(OBJ)/chip_td1601_startup_S.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/startup.S
+$(OBJ)/chip_td1601_lpm_arch_reg_save.o: ../../../../components/chips/chip_td1601/v1.0/sys/lpm_arch_reg_save.S
 	@mkdir -p $(dir $@)
 	$(CC) -c $(ASFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/chip_td1601_vectors_S.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/chips/chip_td1601/v1.0/sys/vectors.S
+$(OBJ)/chip_td1601_startup.o: ../../../../components/chips/chip_td1601/v1.0/sys/startup.S
 	@mkdir -p $(dir $@)
 	$(CC) -c $(ASFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_dq_addlast_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/dq_addlast.c
+$(OBJ)/chip_td1601_vectors.o: ../../../../components/chips/chip_td1601/v1.0/sys/vectors.S
+	@mkdir -p $(dir $@)
+	$(CC) -c $(ASFLAGS) -MF $(@:.o=.d) -o $@ $<
+
+$(OBJ)/mm_dq_addlast.o: ../../../../components/mm/v1.0/src/dq_addlast.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_dq_rem_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/dq_rem.c
+$(OBJ)/mm_dq_rem.o: ../../../../components/mm/v1.0/src/dq_rem.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_lib_mallinfo_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/lib_mallinfo.c
+$(OBJ)/mm_lib_mallinfo.o: ../../../../components/mm/v1.0/src/lib_mallinfo.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_mm_addfreechunk_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/mm_addfreechunk.c
+$(OBJ)/mm_mm_addfreechunk.o: ../../../../components/mm/v1.0/src/mm_addfreechunk.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_mm_free_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/mm_free.c
+$(OBJ)/mm_mm_free.o: ../../../../components/mm/v1.0/src/mm_free.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_mm_initialize_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/mm_initialize.c
+$(OBJ)/mm_mm_initialize.o: ../../../../components/mm/v1.0/src/mm_initialize.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_mm_leak_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/mm_leak.c
+$(OBJ)/mm_mm_leak.o: ../../../../components/mm/v1.0/src/mm_leak.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_mm_mallinfo_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/mm_mallinfo.c
+$(OBJ)/mm_mm_mallinfo.o: ../../../../components/mm/v1.0/src/mm_mallinfo.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_mm_malloc_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/mm_malloc.c
+$(OBJ)/mm_mm_malloc.o: ../../../../components/mm/v1.0/src/mm_malloc.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/mm_mm_size2ndx_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/mm/v1.0/src/mm_size2ndx.c
+$(OBJ)/mm_mm_size2ndx.o: ../../../../components/mm/v1.0/src/mm_size2ndx.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/csi_csi_ringbuffer_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/csi/v1.0/src/csi_ringbuffer.c
+$(OBJ)/csi_csi_ringbuffer.o: ../../../../components/csi/v1.0/src/csi_ringbuffer.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/console_sys_console_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/console/v1.0/src/sys_console.c
+$(OBJ)/console_sys_console.o: ../../../../components/console/v1.0/src/sys_console.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/minilibc__init_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/src/_init.c
+$(OBJ)/minilibc__init.o: ../../../../components/minilibc/v1.0/src/_init.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/minilibc_clock_gettime_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/src/clock_gettime.c
+$(OBJ)/minilibc_clock_gettime.o: ../../../../components/minilibc/v1.0/src/clock_gettime.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/minilibc_malloc_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/src/malloc.c
+$(OBJ)/minilibc_malloc.o: ../../../../components/minilibc/v1.0/src/malloc.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/minilibc_minilibc_port_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/src/minilibc_port.c
+$(OBJ)/minilibc_minilibc_port.o: ../../../../components/minilibc/v1.0/src/minilibc_port.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/minilibc_printf_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/src/printf.c
+$(OBJ)/minilibc_printf.o: ../../../../components/minilibc/v1.0/src/printf.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/minilibc_reboot_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/src/reboot.c
+$(OBJ)/minilibc_reboot.o: ../../../../components/minilibc/v1.0/src/reboot.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 
-$(OBJ)/minilibc_syslog_c.o: /Users/ianqin/workspace/lierda/nine-star/sdk/td1601_evb_v0.2.0_cdk/components/minilibc/v1.0/src/syslog.c
+$(OBJ)/minilibc_syslog.o: ../../../../components/minilibc/v1.0/src/syslog.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -MF $(@:.o=.d) -o $@ $<
 

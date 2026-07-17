@@ -5,12 +5,25 @@
 set -euo pipefail
 PROJECT="gpio_toggle"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PORT="${1:-/dev/ttyUSB0}"
-# Override ISP_TOOL when the shared ISP project is mounted elsewhere.
-ISP_TOOL="${ISP_TOOL:-/Volumes/mpushare/mpushare/macos_workspace/isp-9star/macos-copy-and-download.sh}"
+case "$#" in
+    0) PORT="/dev/ttyUSB0" ;;
+    1) PORT="$1" ;;
+    *)
+        echo "Usage: $0 [/dev/ttyUSB0]" >&2
+        exit 2
+        ;;
+esac
 
-make -C "$HERE"
-"$HERE/aft_build_macos.sh"
+# Use the project's verified staging helper.  It copies the firmware to the
+# Samba share and forwards an explicit Ubuntu-side path to the ISP downloader.
+ISP_TOOL="${ISP_TOOL:-$HERE/utilities/macos-copy-and-download.sh}"
+
+echo "Download port: $PORT"
+
+if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
+    make -C "$HERE"
+    "$HERE/aft_build_macos.sh"
+fi
 
 VERSION="$(sed -n 's/^version:[[:space:]]*V//p' "$HERE/package.yaml" | head -n 1 | tr -d '\r')"
 ADDR="$(grep 'SPIFLASH : ORIGIN = ' "$HERE/../../../../boards/td1601_evb/v1.0/gcc_flash.ld" | grep -oE '0x[0-9a-fA-F]+' | head -n 1)"

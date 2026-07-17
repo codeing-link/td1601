@@ -51,7 +51,7 @@ void gpio_toggle(void)
 
         /* 软件标记当前电平状态（仅用于打印，无硬件控制作用） */
         tmp ^= 1;
-        //printf("gpio set to: %s \r\n", (tmp == 1) ? "high level" : "low level");
+        printf("gpio set to: %s \r\n", (tmp == 1) ? "high level" : "low level");
 
         /* 延时 1000 毫秒：控制闪烁速度，数值越大闪烁越慢 */
         mdelay(1000);

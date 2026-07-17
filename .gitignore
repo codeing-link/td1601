@@ -4,3 +4,5 @@
 **/SKILL.md
 .embedder/
 .embedderignore
+**/__pycache__/
+*.pyc
