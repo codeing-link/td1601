@@ -33,9 +33,91 @@ Makefile / 打包脚本 / 下载脚本
 | 普通串口 UART1 | TX：PA28，RX：PA27，115200，8N1 | 接收数据并回传，用于串口收发测试 |
 | LED | PA24 | 每隔约 1000 ms 翻转一次 |
 
-## 2. 环境准备
+## 2. Windows（Git Bash）使用
 
-### 2.1 Python 3 和 GNU Make
+Windows 下直接在 Git Bash 中完成生成、编译、打包和串口烧写，不需要 SSH、Ubuntu 或
+Samba 共享目录。工具链默认位于工作区同级的 `opt/xpack-riscv`，ISP 下载器随 SDK
+统一管理于 `tools/ISP/BROM_DL.exe`。
+
+### 2.1 安装 xPack RISC-V 工具链
+
+[点击这里下载 xPack RISC-V](https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.3.0-1/xpack-riscv-none-elf-gcc-14.3.0-1-win32-x64.zip)
+下载 `xpack-riscv-none-elf-gcc-14.3.0-1-win32-x64.zip` 后，解压并确保工具链目录为：
+
+```text
+<工作区>/opt/xpack-riscv/xpack-riscv-none-elf-gcc-14.3.0-1
+```
+
+例如，工作区为 `F:\mcu\ninestar\github` 时，工具链应位于：
+
+```text
+F:\mcu\ninestar\github\opt\xpack-riscv\xpack-riscv-none-elf-gcc-14.3.0-1
+```
+
+部分现有脚本会从当前 Windows 用户目录下的 `opt` 查找工具链。为兼容这类脚本，可在
+**命令提示符（cmd）** 中创建目录软连接：
+
+```cmd
+mklink /J "%USERPROFILE%\opt" "F:\mcu\ninestar\github\opt"
+```
+
+`%USERPROFILE%` 会自动展开为当前用户目录，例如
+`C:\Users\Administrator`；不同电脑上的用户名不同，不需要手工修改目标用户目录。
+将右侧源路径替换为实际工作区的 `opt` 目录即可。若 C 盘空间足够，也可以直接将工具链
+解压到 `%USERPROFILE%\opt\xpack-riscv\xpack-riscv-none-elf-gcc-14.3.0-1`，此时不需要创建软连接。
+
+### 2.2 生成 Windows 工程文件
+
+首次为 Windows 生成工程文件时，在 SDK 根目录执行：
+
+```bash
+python tools/generate_td1601_makefiles.py projects/drivers/gpio/gpio_toggle --platform windows --force
+```
+
+在工程目录编译、打包并烧写：
+
+```bash
+cd projects/drivers/gpio/gpio_toggle
+make
+bash aft_build_windows.sh
+bash build_patch_download_windows.sh \
+  -p COM3 \
+  -f ./Obj/gpio_toggle_0x18000000_V1.0.0.bin
+```
+
+`-d` 可省略，脚本默认使用 `../../../../tools/ISP/BROM_DL.exe`。如需指定其他下载器，
+从上述工程目录传入相对路径：
+
+```bash
+bash build_patch_download_windows.sh \
+  -p COM3 \
+  -f ./Obj/gpio_toggle_0x18000000_V1.0.0.bin \
+  -d ../../../../tools/ISP/BROM_DL.exe
+```
+
+## 3. macOS 使用
+
+macOS 保留原有的“本地编译和签名 + Ubuntu 远程 ISP 烧写”流程。生成器默认识别 macOS；
+也可以显式指定平台：
+
+```bash
+python3 tools/generate_td1601_makefiles.py projects/lierda --platform macos --force
+```
+
+在 SDK 根目录执行完整流程：
+
+```bash
+make -C projects/lierda clean
+make -C projects/lierda
+bash projects/lierda/aft_build_macos.sh
+projects/lierda/build_patch_download.sh /dev/ttyUSB0
+```
+
+其中 `/dev/ttyUSB0` 是 Ubuntu 下载机上的串口。macOS 的环境要求、远程下载配置与排障说明见后续章节。
+
+## 4. macOS 环境准备
+
+### 4.1 Python 3 和 GNU Make
 
 检查命令是否可用：
 
@@ -44,7 +126,7 @@ python3 --version
 make --version
 ```
 
-### 2.2 RISC-V 交叉编译工具链
+### 4.2 RISC-V 交叉编译工具链
 
 生成的 `Makefile` 默认使用：
 
@@ -72,7 +154,7 @@ make -C projects/lierda \
   TOOLCHAIN_DIR=/absolute/path/to/xpack-riscv-none-elf-gcc-14.3.0-1
 ```
 
-### 2.3 Wine
+### 4.3 Wine
 
 `aft_build_macos.sh` 使用 SDK 内的 Windows 工具完成固件签名和封装，因此 macOS 上需要安装 Wine：
 
@@ -87,7 +169,7 @@ Apple Silicon 设备如提示缺少 Rosetta，可执行：
 softwareupdate --install-rosetta --agree-to-license
 ```
 
-### 2.4 下载环境
+### 4.4 下载环境
 
 当前下载脚本采用“macOS 本地编译 + Ubuntu 远程 ISP 下载”的方式，需要：
 
@@ -98,7 +180,7 @@ softwareupdate --install-rosetta --agree-to-license
 
 注意：传给下载脚本的 `/dev/ttyUSB0` 是 **Ubuntu 下载机上的设备路径**，不是 macOS 本地串口路径。
 
-## 3. 一次完成生成、编译和下载
+## 5. macOS 一次完成生成、编译和下载
 
 在 SDK 根目录依次执行：
 
@@ -122,7 +204,7 @@ projects/lierda/build_patch_download.sh /dev/ttyUSB0
 SKIP_BUILD=1 projects/lierda/build_patch_download.sh /dev/ttyUSB0
 ```
 
-## 4. 生成工程配置文件
+## 6. macOS 生成工程配置文件
 
 生成命令：
 
@@ -147,15 +229,15 @@ python3 tools/generate_td1601_makefiles.py projects/lierda --force
 
 `--force` 会覆盖上述自动生成的配置文件。应用源码、`package.yaml` 和 `project.cdkproj` 不会被生成器修改，但仍建议在重新生成前提交或备份手工修改过的生成文件。
 
-## 5. 编译工程
+## 7. macOS 编译工程
 
-### 5.1 编译
+### 7.1 编译
 
 ```bash
 make -C projects/lierda
 ```
 
-### 5.2 清理后重新编译
+### 7.2 清理后重新编译
 
 ```bash
 make -C projects/lierda clean
@@ -179,7 +261,7 @@ projects/lierda/Lst/lierda.asm
 - `lierda.map` 可用于分析链接地址和符号占用；
 - 最终 ISP 下载文件需要继续执行打包步骤生成。
 
-## 6. 签名和打包固件
+## 8. macOS 签名和打包固件
 
 执行：
 
@@ -201,9 +283,9 @@ projects/lierda/Obj/lierda_0x18000000_V1.0.0.bin
 
 修改版本号后需要重新执行打包，下载脚本会自动寻找新版本对应的文件名。
 
-## 7. 下载固件
+## 9. macOS 下载固件
 
-### 7.1 使用默认串口
+### 9.1 使用默认串口
 
 不传参数时，远程串口默认为 `/dev/ttyUSB0`：
 
@@ -211,7 +293,7 @@ projects/lierda/Obj/lierda_0x18000000_V1.0.0.bin
 projects/lierda/build_patch_download.sh
 ```
 
-### 7.2 指定远程串口
+### 9.2 指定远程串口
 
 ```bash
 projects/lierda/build_patch_download.sh /dev/ttyUSB1
@@ -234,9 +316,9 @@ ISP_TOOL=/absolute/path/to/macos-copy-and-download.sh \
 
 下载前请让开发板进入 Boot/ISP 模式；下载完成后复位或重新上电，使程序从 Flash 启动。
 
-## 8. 运行验证
+## 10. 运行验证
 
-### 8.1 调试串口日志
+### 10.1 调试串口日志
 
 使用 USB 转串口连接：
 
@@ -254,7 +336,7 @@ TD1601 GND             -> 串口模块 GND
 
 复位开发板后应看到 `lierda` 工程的启动信息和 UART/LED 初始化日志。
 
-### 8.2 普通串口收发
+### 10.2 普通串口收发
 
 连接 UART1：
 
@@ -272,11 +354,11 @@ TD1601 GND             -> 串口模块 GND
 
 向 UART1 发送数据，开发板应通过 UART1 回传收到的数据。
 
-### 8.3 LED
+### 10.3 LED
 
 PA24 上的 LED 每隔约 1000 ms 翻转一次。LED 正常闪烁说明程序已进入主循环且系统延时工作正常。
 
-## 9. 用于其他工程
+## 11. 用于其他工程
 
 其他 TD1601 CDK 工程只要包含有效的 `project.cdkproj` 和 `package.yaml`，也可以使用同一生成器。例如：
 
@@ -299,7 +381,7 @@ utilities/macos-copy-and-download.sh
 projects/drivers/gpio/gpio_toggle/build_patch_download.sh /dev/ttyUSB0
 ```
 
-## 10. 常见问题
+## 12. macOS 常见问题
 
 ### 生成器提示文件已存在
 
@@ -391,7 +473,7 @@ make -C projects/lierda
 
 `lierda` 工程的入口应位于 `0x18000000` Flash 区域内。随后重新打包并下载，不要直接把未封装的 `lierda.bin` 当作最终 ISP 固件下载。
 
-## 11. 推荐的日常开发命令
+## 13. macOS 推荐的日常开发命令
 
 修改源码后，一键编译、打包并下载：
 

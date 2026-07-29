@@ -3,7 +3,7 @@
 PROJECT := gpio_toggle
 OBJ := Obj
 LST := Lst
-TOOLCHAIN_DIR ?= $(HOME)/opt/xpack-riscv/xpack-riscv-none-elf-gcc-14.3.0-1
+TOOLCHAIN_DIR ?= $(abspath ../../../../../opt/xpack-riscv/xpack-riscv-none-elf-gcc-14.3.0-1)
 CROSS := $(TOOLCHAIN_DIR)/bin/riscv-none-elf-
 CC := $(CROSS)gcc
 AR := $(CROSS)ar

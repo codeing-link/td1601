@@ -3,7 +3,14 @@
 PROJECT := lierda
 OBJ := Obj
 LST := Lst
-TOOLCHAIN_DIR ?= $(HOME)/opt/xpack-riscv/xpack-riscv-none-elf-gcc-14.3.0-1
+# 自动兼容 Windows 的 USERPROFILE 路径，并将 \ 替换为 /
+ifeq ($(OS),Windows_NT)
+    # Keep the Windows toolchain with the sibling opt directory.
+    TOOLCHAIN_DIR ?= $(abspath ../../../opt/xpack-riscv/xpack-riscv-none-elf-gcc-14.3.0-1)
+else
+    TOOLCHAIN_DIR ?= $(HOME)/opt/xpack-riscv/xpack-riscv-none-elf-gcc-14.3.0-1
+endif
+
 CROSS := $(TOOLCHAIN_DIR)/bin/riscv-none-elf-
 CC := $(CROSS)gcc
 AR := $(CROSS)ar
