@@ -3,9 +3,8 @@
  * @brief    BLE transport 占位实现
  *
  * 说明：
- *   当前硬件未接入 BLE，本文件只提供与 UART 相同的 transport_t 接口。
- *   后续 BLE ready 后，只需要在这里对接 BLE 串口透传的 init/send/recv，
- *   file_transfer、fs_image、jpeg_viewer 不需要修改。
+ *   当前 GUI 硬件上 BLE 模组与 PC 下载共用 PA17/PA18 串口，AT 兼容处理放在
+ *   transport_uart.c。本文件保留接口，后续若改成独立 BLE SDK/独立 UART 再扩展。
  ******************************************************************************/
 
 #include <stdint.h>

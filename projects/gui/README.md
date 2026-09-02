@@ -1,6 +1,6 @@
 # GUI 工程说明
 
-该工程运行在 TD1601 EVB 裸机环境中，当前默认功能是初始化 ST77916 QSPI LCD、初始化 CST816 触摸控制器，启动后扫描 LittleFS 中已有 JPG 图片并显示上次停留的图片；也可以通过 UART 接收 JPG 文件，保存到 LittleFS，校验成功后按文件名保存为正式图片，再通过 TJpgDec 从 LittleFS 流式解码显示到屏幕。存在多张图片时，可通过左滑/右滑循环切换。
+该工程运行在 TD1601 EVB 裸机环境中，当前默认功能是初始化 ST77916 QSPI LCD、初始化 CST816 触摸控制器，启动后扫描 LittleFS 中已有 JPG 图片并显示上次停留的图片；也可以通过 UART 接收 JPG 文件，保存到 LittleFS，校验成功后按文件名保存为正式图片，再通过 TJpgDec 从 LittleFS 流式解码显示到屏幕。存在多张图片时，可通过上滑/下滑循环切换。
 
 ## 启动流程
 
@@ -33,7 +33,7 @@
 
 5. 主循环
    - `GUI_UART_MODE_DATA` 模式下调用 `image_update_poll()`，从 transport 取字节，解析协议，写 LittleFS，完成后自动显示刚收到的 JPG。
-   - `GUI_UART_MODE_DATA` 模式下同时读取 CST816 手势，左滑显示下一张，右滑显示上一张；切换后会更新 `/.current_image`。
+   - `GUI_UART_MODE_DATA` 模式下同时读取 CST816 手势，下滑显示下一张，上滑显示上一张；切换后会更新 `/.current_image`。
    - `GUI_UART_MODE_LOG` 模式下，`Touch_Poll()` 有触摸事件时读取并打印 `x/y/points`。
 
 ## LCD 通路
@@ -131,10 +131,10 @@ jpeg_viewer_show_file("/1.jpg");
 - 扫描 LittleFS 根目录下最多 16 张 `.jpg/.jpeg` 图片，并按文件名排序。
 - 上电时读取 `/.current_image`，直接显示上次实际显示的图片。
 - 没有图片时清黑屏，不写入或显示默认图片。
-- 左滑切换下一张，右滑切换上一张，切换顺序循环。
+- 下滑切换下一张，上滑切换上一张，切换顺序循环。
 - 每次成功显示图片后，把当前路径写入 `/.current_image`。
 
-`jpeg_viewer_show_file()` 只负责解码显示单个文件；启动恢复、图片列表、左右滑切换和当前图片持久化都由 `image_gallery` 管理。
+`jpeg_viewer_show_file()` 只负责解码显示单个文件；启动恢复、图片列表、上下滑切换和当前图片持久化都由 `image_gallery` 管理。
 
 ## UART/BLE 图片传输
 
@@ -169,7 +169,7 @@ image_update_init(&g_ble_transport);
 - `file_transfer.c/h`：START/DATA/END 协议解析、ACK/NACK、CRC、seq/offset 校验；不直接调用 UART。
 - `fs_image.c/h`：LittleFS 临时文件保存、CRC32 校验、rename。
 - `jpeg_viewer.c/h`：从 LittleFS 文件解码显示。
-- `image_gallery.c/h`：LittleFS 图片库，负责启动扫描、上次图片恢复、左右滑切换和当前图片记录。
+- `image_gallery.c/h`：LittleFS 图片库，负责启动扫描、上次图片恢复、上下滑切换和当前图片记录。
 - `app_image_update.c/h`：应用入口，连接 transport、file_transfer、image_gallery 和触摸手势。
 
 文件策略：
@@ -373,7 +373,7 @@ void gui_uart_clear_rx(void);
 - `src/file_transfer.c/h`：图片传输协议状态机、ACK/NACK、CRC 和分片校验。
 - `src/fs_image.c/h`：LittleFS 图片临时文件和正式文件管理。
 - `src/jpeg_viewer.c/h`：从 LittleFS 文件解码显示。
-- `src/image_gallery.c/h`：扫描 LittleFS 图片、恢复上次显示、左右滑切换和记录当前图片。
+- `src/image_gallery.c/h`：扫描 LittleFS 图片、恢复上次显示、上下滑切换和记录当前图片。
 - `src/app_image_update.c/h`：图片更新应用入口，驱动传输状态机和触摸切图。
 - `src/ST77916.c/h`：LCD 初始化、窗口设置、RGB565 像素写入、背光控制。
 - `src/CST816.c/h`：触摸初始化、中断标志、坐标读取。

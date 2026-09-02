@@ -1,6 +1,6 @@
 /******************************************************************************
  * @file     image_gallery.c
- * @brief    LittleFS 图片库：扫描 JPG、显示当前图片、左右滑切换
+ * @brief    LittleFS 图片库：扫描 JPG、显示当前图片、上下滑切换
  ******************************************************************************/
 
 #include <stdio.h>
@@ -301,9 +301,11 @@ void image_gallery_handle_touch(const cst816_data_t *touch)
         return;
     }
 
-    if (touch->gesture == CST816_GESTURE_LEFT) {
+    /* 下滑显示下一张；到最后一张后从第一张继续循环。 */
+    if (touch->gesture == CST816_GESTURE_DOWN) {
         (void)image_gallery_next();
-    } else if (touch->gesture == CST816_GESTURE_RIGHT) {
+    /* 上滑显示上一张；到第一张后回到最后一张。 */
+    } else if (touch->gesture == CST816_GESTURE_UP) {
         (void)image_gallery_prev();
     }
 }

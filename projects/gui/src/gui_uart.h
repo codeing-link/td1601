@@ -12,6 +12,19 @@
 extern "C" {
 #endif
 
+/* 下载模式：默认 AT 蓝牙下载；需要 PC 直连下载时，改成 GUI_DOWNLOAD_MODE_PC。 */
+#define GUI_DOWNLOAD_MODE_PC    0
+#define GUI_DOWNLOAD_MODE_AT    1
+
+#ifndef GUI_DOWNLOAD_MODE
+#define GUI_DOWNLOAD_MODE       GUI_DOWNLOAD_MODE_AT
+#endif
+
+#if (GUI_DOWNLOAD_MODE != GUI_DOWNLOAD_MODE_AT) && \
+    (GUI_DOWNLOAD_MODE != GUI_DOWNLOAD_MODE_PC)
+#error "GUI_DOWNLOAD_MODE must be GUI_DOWNLOAD_MODE_AT or GUI_DOWNLOAD_MODE_PC"
+#endif
+
 /* UART0 作为日志串口使用，printf 正常输出调试日志。 */
 #define GUI_UART_MODE_LOG       0
 
@@ -29,14 +42,18 @@ extern "C" {
 #define GUI_UART_MODE           GUI_UART_MODE_DATA
 #endif
 
-/* 普通串口模式参数，默认复用日志串口的高速波特率。 */
+/* 下载串口参数：AT 模式默认 115200，PC 模式默认 921600。 */
 #ifndef GUI_UART_DATA_BAUDRATE
+#if GUI_DOWNLOAD_MODE == GUI_DOWNLOAD_MODE_AT
+#define GUI_UART_DATA_BAUDRATE  115200U
+#else
 #define GUI_UART_DATA_BAUDRATE  921600U
 #endif
+#endif
 
-/* 中断接收环形缓冲区大小，默认 2048 字节。 */
+/* 中断接收环形缓冲区大小。921600 下建议至少 4KB，避免刷屏时短时积压。 */
 #ifndef GUI_UART_RX_BUF_SIZE
-#define GUI_UART_RX_BUF_SIZE    2048U
+#define GUI_UART_RX_BUF_SIZE    4096U
 #endif
 
 /* 阻塞发送超时时间，单位 ms。 */

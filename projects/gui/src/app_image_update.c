@@ -35,7 +35,7 @@ void image_update_poll(void)
 
     file_transfer_poll();
 
-    /* DATA 模式下左右滑切换 LittleFS 中已有 JPG 图片 */
+    /* DATA 模式下上下滑切换 LittleFS 中已有 JPG 图片 */
     if (Touch_Poll(&touch)) {
         image_gallery_handle_touch(&touch);
     }

@@ -1,6 +1,6 @@
 # GUI 工程 C 文件结构说明
 
-本文档用于帮助开发者快速读懂 `projects/gui` 工程。当前工程的主要功能是：初始化 LCD 和触摸，启动后扫描 LittleFS 中已有 JPG 图片并显示上次停留的图片；默认通过 UART 接收 JPG 图片，保存到 LittleFS，校验成功后加入图片库并解码显示。存在多张图片时，用户可以通过左滑/右滑循环切换。未来 BLE 接入后，只替换 transport 层，不重写图片接收、文件保存、图片库和显示核心逻辑。
+本文档用于帮助开发者快速读懂 `projects/gui` 工程。当前工程的主要功能是：初始化 LCD 和触摸，启动后扫描 LittleFS 中已有 JPG 图片并显示上次停留的图片；默认通过 UART 接收 JPG 图片，保存到 LittleFS，校验成功后加入图片库并解码显示。存在多张图片时，用户可以通过上滑/下滑循环切换。未来 BLE 接入后，只替换 transport 层，不重写图片接收、文件保存、图片库和显示核心逻辑。
 
 ## 1. 推荐阅读顺序
 
@@ -203,7 +203,7 @@ void image_update_poll(void);
 - `image_update_init()` 调用 `fs_image_mount()` 挂载文件系统。
 - 初始化 `file_transfer`。
 - 调用 `image_gallery_show_saved_or_first()`：有图显示上次图片，无图清黑屏。
-- `image_update_poll()` 先跑传输状态机，再读取 `Touch_Poll()`，将左右滑交给 `image_gallery_handle_touch()`。
+- `image_update_poll()` 先跑传输状态机，再读取 `Touch_Poll()`，将上下滑交给 `image_gallery_handle_touch()`。
 
 ## 6. 文件传输协议层
 
@@ -317,7 +317,7 @@ const char *fs_image_get_final_path(void);
 - 最多缓存 16 张图片路径，按文件名排序。
 - 上电读取 `/.current_image`，恢复上次实际显示的图片。
 - 没有图片时清黑屏，不显示默认图。
-- 左滑切换下一张，右滑切换上一张，列表首尾循环。
+- 下滑切换下一张，上滑切换上一张，列表首尾循环。
 - 每次显示成功后，把当前图片路径写入 `/.current_image`。
 
 关键接口：
@@ -338,9 +338,9 @@ void image_gallery_handle_touch(const cst816_data_t *touch);
 
 触摸策略：
 
-- `CST816_GESTURE_LEFT`：显示下一张。
-- `CST816_GESTURE_RIGHT`：显示上一张。
-- 只有 0 或 1 张图片时，左右滑不会触发重刷。
+- `CST816_GESTURE_DOWN`：显示下一张。
+- `CST816_GESTURE_UP`：显示上一张。
+- 只有 0 或 1 张图片时，上下滑不会触发重刷。
 
 ### `src/jpeg_viewer.c` / `src/jpeg_viewer.h`
 
@@ -367,7 +367,7 @@ jpeg_viewer_show_file("/1.jpg");
 - 不需要整帧 framebuffer
 - JPEG 数据从 LittleFS 流式读取
 - 解码输出块直接通过 `LCD_addWindow()` 显示
-- 不负责图片列表、左右滑切换和当前图片持久化
+- 不负责图片列表、上下滑切换和当前图片持久化
 
 ### `src/jpg_display.c` / `src/jpg_display.h`
 
@@ -425,7 +425,7 @@ void Touch_Init(void);
 bool Touch_Poll(cst816_data_t *out);
 ```
 
-DATA 模式下，`Touch_Poll()` 返回的左右滑手势会传给 `image_gallery_handle_touch()`，用于切换 LittleFS 中已有图片。CST816 有时只上报 gesture 而触点数为 0，因此驱动会在存在有效 gesture 时也返回事件。
+DATA 模式下，`Touch_Poll()` 返回的上下滑手势会传给 `image_gallery_handle_touch()`，用于切换 LittleFS 中已有图片。CST816 有时只上报 gesture 而触点数为 0，因此驱动会在存在有效 gesture 时也返回事件。
 
 ## 11. LittleFS 移植层
 
@@ -594,13 +594,13 @@ DATA 模式下为了避免日志污染协议，链接参数包含：
 3. `/.current_image` 记录的路径是否已经被删除；删除后应自动回退到第一张
 4. `jpeg_viewer_show_file()` 是否返回解码错误
 
-### 左右滑不能切图
+### 上下滑不能切图
 
 优先检查：
 
 1. LittleFS 中是否至少有 2 张 `.jpg/.jpeg` 图片
 2. `Touch_Init()` 是否成功，CST816 INT 是否有触发
-3. CST816 手势值是否为 `0x03` 左滑或 `0x04` 右滑
+3. CST816 手势值是否为 `0x01` 上滑或 `0x02` 下滑
 4. `image_update_poll()` 是否在主循环中持续调用
 
 ## 16. 总体调用关系

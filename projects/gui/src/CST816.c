@@ -187,7 +187,7 @@ void Touch_Init(void)
 
 /*
  * 触摸数据布局（从寄存器 0x01 起读 6 字节）：
- *   byte0: 手势 ID，常见值：0x03 左滑，0x04 右滑
+ *   byte0: 手势 ID，常见值：0x01 上滑，0x02 下滑
  *   byte1: 触点数
  *   byte2: bit[3:0] = X 高 4 位
  *   byte3: X 低 8 位
@@ -240,6 +240,6 @@ bool Touch_Poll(cst816_data_t *out)
         return false;
     }
 
-    /* 左右滑有时只上报 gesture，触点数可能为 0，也需要交给上层处理 */
+    /* 滑动手势有时只上报 gesture，触点数可能为 0，也需要交给上层处理 */
     return (out->points > 0 || out->gesture != CST816_GESTURE_NONE);
 }
